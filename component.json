@@ -1,0 +1,15 @@
+{
+  "name": "drivesafe",
+  "dependencies": {
+    "components/jquery": "*",
+    "components/backbone": "*",
+    "marksteve/gibberish-aes": "*",
+    "necolas/normalize.css": "*"
+  },
+  "scripts": [
+    "index.js"
+  ],
+  "styles": [
+    "index.css"
+  ]
+}
