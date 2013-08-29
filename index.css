@@ -25,3 +25,5 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
     border: 1px #444 solid;
     background-color: #444;
     color: white; }
+  .app .open {
+    display: none; }

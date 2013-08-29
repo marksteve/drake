@@ -8,14 +8,29 @@ App = Backbone.View.extend
   el: ".app"
 
   events:
-    "submit .open form": "open"
+    "click .pick button": "pick"
 
   initialize: ->
-    @safe = AES.enc(JSON.stringify([name: "value"]), "password")
+    @picker = new google.picker.PickerBuilder()
+      .addView(google.picker.ViewId.DOCS)
+      .setCallback(@pickerCb)
+      .build()
 
-  open: (e) ->
-    e.preventDefault()
-    console.log(AES.dec(@safe, @$(".open input[type=password]").val()))
+  pick: (e) ->
+    @picker.setVisible(true)
+
+  pickerCb: (data) ->
+    switch data[google.picker.Response.ACTION]
+      when google.picker.Action.PICKED
+        doc = data[google.picker.Response.DOCUMENTS][0]
+        console.log doc
+
+  enc: (data, password) ->
+    AES.enc(JSON.stringify(data), password)
 
 
-app = new App()
+window.start = ->
+  app = new App()
+
+
+google.load("picker", "1", callback: "start")
