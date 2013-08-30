@@ -2,9 +2,11 @@
   "name": "drivesafe",
   "dependencies": {
     "components/jquery": "*",
+    "components/underscore": "*",
     "components/backbone": "*",
-    "marksteve/gibberish-aes": "*",
-    "necolas/normalize.css": "*"
+    "necolas/normalize.css": "*",
+    "rstacruz/nprogress": "*",
+    "marksteve/sjcl": "*"
   },
   "scripts": [
     "index.js"
