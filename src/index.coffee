@@ -1,4 +1,4 @@
-$ = require "jquery"
+require "jquery"
 _ = require "underscore"
 Backbone = require "backbone"
 NProgress = require "nprogress"
@@ -25,12 +25,19 @@ App = Backbone.View.extend
     "click .pick button": "pick"
 
   initialize: ->
-    @
+    $(document)
+      .ajaxStart ->
+        NProgress.start()
+      .ajaxStop ->
+        NProgress.done()
+    @load()
 
-  load: (cb) ->
-    gapi.load "auth",
-      _.bind ->
+  load: ->
+    NProgress.start()
+    gapi.load "auth,client", _.bind ->
+      gapi.client.load "drive", "v2", _.bind ->
         @loadPicker ->
+          NProgress.done()
           @auth true, _.bind (token) ->
             if token and not token.error
               @hideAuth()
@@ -38,8 +45,8 @@ App = Backbone.View.extend
             else
               @showAuth()
           , @
-          _.bind(cb, @)()
       , @
+    , @
     @
 
   loadPicker: (cb) ->
@@ -47,7 +54,7 @@ App = Backbone.View.extend
       callback: _.bind ->
         @picker = new google.picker.PickerBuilder()
           .addView(google.picker.ViewId.DOCS)
-          .setCallback(@pickerCb)
+          .setCallback(_.bind(@pickerCb, @))
           .build()
         _.bind(cb, @)()
       , @
@@ -63,9 +70,15 @@ App = Backbone.View.extend
 
   showAuth: ->
     @$(".auth").show()
+    @
 
   hideAuth: ->
     @$(".auth").hide()
+    @
+
+  pick: (e) ->
+    @picker.setVisible(true)
+    @
 
   showPick: ->
     @$(".pick").show()
@@ -73,16 +86,28 @@ App = Backbone.View.extend
   pickerCb: (data) ->
     switch data[google.picker.Response.ACTION]
       when google.picker.Action.PICKED
-        doc = data[google.picker.Response.DOCUMENTS][0]
-        console.log doc
+        fileId = data[google.picker.Response.DOCUMENTS][0].id
+        @loadDoc fileId, ->
+          @showOpen()
     @
 
-  pick: (e) ->
-    @picker.setVisible(true)
+  loadDoc: (fileId, cb) ->
+    req = gapi.client.drive.files.get(fileId: fileId)
+    req.execute _.bind (doc) ->
+      $.ajax
+        url: doc.downloadUrl
+        type: 'get'
+      .done (resp) ->
+        console.log resp
+        _.bind(cb, @)()
+      .fail ->
+        console.error "Failed to load doc"
+    , @
+    @
+
+  showOpen: ->
+    @$(".open").show()
     @
 
 
 app = new App()
-app.load ->
-  NProgress.done()
-NProgress.start()
