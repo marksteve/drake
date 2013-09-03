@@ -1,6 +1,8 @@
 {
   "name": "drivesafe",
   "dependencies": {
+    "component/json-fallback": "*",
+    "component/json": "*",
     "components/jquery": "*",
     "components/underscore": "*",
     "components/backbone": "*",

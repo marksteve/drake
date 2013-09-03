@@ -1,113 +1,143 @@
 require "jquery"
+JSON = require "json"
 _ = require "underscore"
 Backbone = require "backbone"
 NProgress = require "nprogress"
+sjcl = require "sjcl"
 
 
 Config =
   clientId: "671657367079.apps.googleusercontent.com"
 
 
-Doc = Backbone.Model.extend
+class Safe extends Backbone.Model
 
-  initialize: ->
+  jsonContent: =>
+    JSON.parse(@get("content"))
+
+  decrypt: (password) =>
+    sjcl.decrypt(password, @jsonContent())
 
 
-App = Backbone.View.extend
+class App extends Backbone.View
 
   el: ".app"
 
   events:
-    "click .auth button": (e) ->
-      @auth false, ->
-        @hideAuth()
-        @showPick()
+    "click .auth button": =>
+      @auth false, @checkAuth
     "click .pick button": "pick"
+    "click .open button": "open"
 
-  initialize: ->
+  initialize: =>
+    @safe = new Safe()
+    @setupPlugins()
+    @load()
+
+  setupPlugins: =>
     $(document)
       .ajaxStart ->
         NProgress.start()
       .ajaxStop ->
         NProgress.done()
-    @load()
+    @
 
-  load: ->
+  load: =>
     NProgress.start()
-    gapi.load "auth,client", _.bind ->
-      gapi.client.load "drive", "v2", _.bind ->
-        @loadPicker ->
-          NProgress.done()
-          @auth true, _.bind (token) ->
-            if token and not token.error
-              @hideAuth()
-              @showPick()
-            else
-              @showAuth()
-          , @
-      , @
-    , @
+    gapi.load "auth,client", @loadDrive
     @
 
-  loadPicker: (cb) ->
-    google.load "picker", "1",
-      callback: _.bind ->
-        @picker = new google.picker.PickerBuilder()
-          .addView(google.picker.ViewId.DOCS)
-          .setCallback(_.bind(@pickerCb, @))
-          .build()
-        _.bind(cb, @)()
-      , @
+  loadDrive: =>
+    gapi.client.load "drive", "v2", @loadPicker
     @
 
-  auth: (immediate, cb) ->
+  loadPicker: (cb) =>
+    google.load "picker", "1", callback: @buildPicker
+    @
+
+  buildPicker: =>
+    NProgress.done()
+    @picker = new google.picker.PickerBuilder()
+      .addView(google.picker.ViewId.DOCS)
+      .setCallback(@pickerCb)
+      .build()
+    @auth true, @checkAuth
+
+  auth: (immediate, cb) =>
     gapi.auth.authorize
       client_id: Config.clientId
       scope: "https://www.googleapis.com/auth/drive"
       immediate: immediate
-    , _.bind(cb, @)
+    , cb
     @
 
-  showAuth: ->
+  checkAuth: (token) =>
+    if token and not token.error
+      @hideAuth()
+      @showPick()
+    else
+      @showAuth()
+
+  showAuth: =>
     @$(".auth").show()
     @
 
-  hideAuth: ->
+  hideAuth: =>
     @$(".auth").hide()
     @
 
-  pick: (e) ->
+  pick: (e) =>
     @picker.setVisible(true)
     @
 
-  showPick: ->
+  showPick: =>
     @$(".pick").show()
 
-  pickerCb: (data) ->
+  hidePick: =>
+    @$(".pick").hide()
+
+  pickerCb: (data) =>
     switch data[google.picker.Response.ACTION]
       when google.picker.Action.PICKED
         fileId = data[google.picker.Response.DOCUMENTS][0].id
-        @loadDoc fileId, ->
-          @showOpen()
+        @loadSafe(fileId)
     @
 
-  loadDoc: (fileId, cb) ->
+  loadSafe: (fileId) =>
     req = gapi.client.drive.files.get(fileId: fileId)
-    req.execute _.bind (doc) ->
-      $.ajax
-        url: doc.downloadUrl
-        type: 'get'
-      .done (resp) ->
-        console.log resp
-        _.bind(cb, @)()
-      .fail ->
-        console.error "Failed to load doc"
-    , @
+    req.execute @setSafeMetadata
     @
 
-  showOpen: ->
+  setSafeMetadata: (metadata) =>
+    @safe.set(metadata)
+    @downloadSafe()
+    @
+
+  downloadSafe: =>
+    console.log "Downloading #{@safe.get("downloadUrl")}..."
+    $.ajax
+      url: @safe.get("downloadUrl")
+      type: "get"
+      headers:
+        "Authorization": "Bearer #{gapi.auth.getToken().access_token}"
+    .done(@setSafeContent)
+    .fail ->
+      console.error "Failed to download safe"
+    @
+
+  setSafeContent: (resp) =>
+    @safe.set('content', resp)
+    @hidePick()
+    @showOpen()
+    @
+
+  showOpen: =>
     @$(".open").show()
     @
+
+  open: =>
+    password = @$(".open input[type=password]").val()
+    console.log @safe.decrypt(password)
 
 
 app = new App()
