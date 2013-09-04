@@ -49,7 +49,7 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
 .prompt-popover-content {
   background-color: #fafafa;
   border: 1px #444 solid;
-  padding: 10px;
+  padding: 1em;
 }
 
 .app {
@@ -78,12 +78,48 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
   .section {
     display: none;
   }
+  .entries {
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    > ul {
+      margin-right: -3.4%;
+    }
+    .search {
+      box-sizing: border-box;
+      font-size: 120%;
+      width: 100%;
+      display: block;
+      padding: 0 0.5em;
+    }
+    .entry {
+      box-sizing: border-box;
+      display: inline-block;
+      width: 30%;
+      margin: 1em 3.33% 0 0;
+      padding: 1em;
+      border: 1px #444 solid;
+      h2 {
+        margin-top: 0;
+      }
+      .details {
+        li {
+          margin-bottom: 1em;
+        }
+        label, input[type=text], input[type=password] {
+          display: block;
+        }
+      }
+    }
+  }
   .footer {
     border-top: 1px #ddd solid;
     color: #bbb;
     font-size: 80%;
-    margin-top: 50px;
-    padding-top: 10px;
+    margin-top: 5em;
+    padding-top: 1em;
     text-align: right;
     a {
       color: #888;

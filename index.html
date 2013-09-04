@@ -55,6 +55,28 @@
           </button>
         </p>
       </div>
+      <div class="entries section">
+        <input type="text" placeholder="Search entries" class="search">
+        <ul>
+          <li class="entry" id="{ id }">
+            <h2>{ title }</h2>
+            <ul class="details">
+              <li>
+                <label for="{ id }-username">Username</label>
+                <input id="{ id }-username" type="text" class="username" value="{ username }">
+              </li>
+              <li>
+                <label for="{ id }-password">Password</label>
+                <input id="{ id }-password" type="password" class="password" value="{ password }">
+              </li>
+              <li>
+                <label for="{ id }-url">URL</label>
+                <input id="{ id }-url" type="text" class="url" value="{ url }">
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
       <div class="footer">
         by <a href="https://github.com/marksteve">marksteve</a> &star;
         repo <a href="https://github.com/marksteve/drivesafe">github</a> &star;
@@ -64,6 +86,6 @@
     <script src="https://www.google.com/jsapi"></script>
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="build/build.js"></script>
-    <script>require('drivesafe');</script>
+    <script>require('drivesafe').load();</script>
   </body>
 </html>

@@ -10,7 +10,8 @@
     "rstacruz/nprogress": "*",
     "marksteve/sjcl": "*",
     "matthewmueller/uid": "*",
-    "component/prompt-popover": "*"
+    "component/prompt-popover": "*",
+    "component/reactive": "*"
   },
   "scripts": [
     "index.js"

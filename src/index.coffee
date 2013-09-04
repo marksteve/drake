@@ -5,10 +5,22 @@ Backbone = require "backbone"
 NProgress = require "nprogress"
 sjcl = require "sjcl"
 uid = require "uid"
+reactive = require "reactive"
+
+
+reactive.subscribe (obj, prop, fn) -> obj.on("change:#{prop}", fn)
+reactive.set (obj, prop) -> obj.set(prop)
+reactive.get (obj, prop) -> obj.get(prop)
 
 
 Config =
   clientId: "671657367079.apps.googleusercontent.com"
+
+Templates =
+    entry: document.querySelector(".entry")
+
+for el in _(Templates).values()
+  el.remove()
 
 
 class SafeEntry extends Backbone.Model
@@ -21,13 +33,28 @@ class SafeEntries extends Backbone.Collection
 
 class Safe extends Backbone.Model
 
-  decrypt: (password) =>
+  open: (password) =>
     try
       entries = sjcl.decrypt(password, @get("ciphertext"))
     catch
       return false
     @set("entries", new SafeEntries(JSON.parse(entries)))
-    true
+    return true
+
+
+class SafeEntryView extends Backbone.View
+
+  events:
+    "focus .password": "showPassword"
+    "blur .password": "hidePasword"
+
+  showPassword: =>
+    @$(".password").attr("type", "text")
+    @
+
+  hidePasword: =>
+    @$(".password").attr("type", "password")
+    @
 
 
 class App extends Backbone.View
@@ -69,8 +96,8 @@ class App extends Backbone.View
 
   initialize: =>
     @safe = new Safe()
+    @safe.on("change:entries", @renderEntries)
     @setupPlugins()
-    @load()
     @
 
   setupPlugins: =>
@@ -144,6 +171,7 @@ class App extends Backbone.View
       id: uid(20)
       title: "Example"
       url: "http://example.com"
+      username: "username"
       password: "password"
     ]
     boundary = uid()
@@ -212,8 +240,21 @@ class App extends Backbone.View
 
   open: =>
     password = @$(".open input[type=password]").val()
-    if @safe.decrypt(password)
-      console.log @safe.get("entries")
+    if @safe.open(password)
+      @hideOpen()
+      @showEntries()
+    @
+
+  showEntries: =>
+    @$(".entries").show()
+
+  renderEntries: =>
+    $entries = @$(".entries ul")
+    @safe.get("entries").each (entry) ->
+      $entries.append(new SafeEntryView(
+        model: entry
+        el: reactive(Templates.entry, entry).el
+      ).el)
 
 
-app = new App()
+module.exports = new App()
