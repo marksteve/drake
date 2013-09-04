@@ -11,13 +11,23 @@ Config =
   clientId: "671657367079.apps.googleusercontent.com"
 
 
+class SafeEntry extends Backbone.Model
+
+
+class SafeEntries extends Backbone.Collection
+
+  model: SafeEntry
+
+
 class Safe extends Backbone.Model
 
-  jsonContent: =>
-    JSON.parse(@get("content"))
-
   decrypt: (password) =>
-    sjcl.decrypt(password, @jsonContent())
+    try
+      entries = sjcl.decrypt(password, @get("ciphertext"))
+    catch
+      return false
+    @set("entries", new SafeEntries(JSON.parse(entries)))
+    true
 
 
 class App extends Backbone.View
@@ -187,7 +197,7 @@ class App extends Backbone.View
     @
 
   setSafeContent: (resp) =>
-    @safe.set('content', resp)
+    @safe.set("ciphertext", JSON.stringify(resp))
     @hideLoad()
     @showOpen()
     @
@@ -202,7 +212,8 @@ class App extends Backbone.View
 
   open: =>
     password = @$(".open input[type=password]").val()
-    console.log @safe.decrypt(password)
+    if @safe.decrypt(password)
+      console.log @safe.get("entries")
 
 
 app = new App()
