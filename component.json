@@ -1,14 +1,16 @@
 {
   "name": "drivesafe",
   "dependencies": {
+    "necolas/normalize.css": "*",
     "component/json-fallback": "*",
     "component/json": "*",
     "components/jquery": "*",
     "components/underscore": "*",
     "components/backbone": "*",
-    "necolas/normalize.css": "*",
     "rstacruz/nprogress": "*",
-    "marksteve/sjcl": "*"
+    "marksteve/sjcl": "*",
+    "matthewmueller/uid": "*",
+    "component/prompt-popover": "*"
   },
   "scripts": [
     "index.js"

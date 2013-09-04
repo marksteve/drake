@@ -4,6 +4,7 @@ _ = require "underscore"
 Backbone = require "backbone"
 NProgress = require "nprogress"
 sjcl = require "sjcl"
+uid = require "uid"
 
 
 Config =
@@ -26,14 +27,41 @@ class App extends Backbone.View
   events:
     "click .auth button": ->
       @auth false, @checkAuth
-    "click .load button.new": "newSafe"
+    "click .load button.new": ->
+      @hideLoad()
+      @showNew()
+    "click .new button.ok": ->
+      name = @$(".new .name").val().trim()
+      password = @$(".new .password").val()
+      unless (name and password)
+        return
+      @hideNew()
+      @newSafe(name, password)
+    "click .new button.cancel": ->
+      @hideNew()
+      @showLoad()
     "click .load button.pick": "pick"
     "click .open button": "open"
+
+  multipartBody: (boundary, metadata, contentType, data) ->
+    """
+    --#{boundary}
+    Content-Type: application/json
+
+    #{JSON.stringify(metadata)}
+    --#{boundary}
+    Content-Type: #{contentType}
+    Content-Transfer-Encoding: base64
+
+    #{btoa(data)}
+    --#{boundary}--
+    """
 
   initialize: =>
     @safe = new Safe()
     @setupPlugins()
     @load()
+    @
 
   setupPlugins: =>
     $(document)
@@ -63,6 +91,7 @@ class App extends Backbone.View
       .setCallback(@pickerCb)
       .build()
     @auth true, @checkAuth
+    @
 
   auth: (immediate, cb) =>
     gapi.auth.authorize
@@ -78,22 +107,53 @@ class App extends Backbone.View
       @showLoad()
     else
       @showAuth()
+    @
 
   showAuth: =>
-    @$(".auth").show()
+    @$(".auth.section").show()
     @
 
   hideAuth: =>
-    @$(".auth").hide()
+    @$(".auth.section").hide()
     @
 
   showLoad: =>
-    @$(".load").show()
+    @$(".load.section").show()
 
   hideLoad: =>
-    @$(".load").hide()
+    @$(".load.section").hide()
 
-  pick: (e) =>
+  showNew: =>
+    @$(".new.section").show()
+
+  hideNew: =>
+    @$(".new.section").hide()
+
+  newSafe: (name, password) =>
+    safe = [
+      id: uid(20)
+      title: "Example"
+      url: "http://example.com"
+      password: "password"
+    ]
+    boundary = uid()
+    contentType = "application/json"
+    metadata =
+      title: "#{name}.safe"
+      mimeType: contentType
+    data = sjcl.encrypt(password, JSON.stringify(safe))
+    req = gapi.client.request
+      path: "/upload/drive/v2/files"
+      method: "POST"
+      params:
+        uploadType: "multipart"
+      headers:
+        "Content-Type": "multipart/mixed; boundary=#{boundary}"
+      body:
+        @multipartBody(boundary, metadata, contentType, data)
+    req.execute @setSafeMetadata
+
+  pick: =>
     @picker.setVisible(true)
     @
 
@@ -101,10 +161,10 @@ class App extends Backbone.View
     switch data[google.picker.Response.ACTION]
       when google.picker.Action.PICKED
         fileId = data[google.picker.Response.DOCUMENTS][0].id
-        @loadSafe(fileId)
+        @getSafeMetadata(fileId)
     @
 
-  loadSafe: (fileId) =>
+  getSafeMetadata: (fileId) =>
     req = gapi.client.drive.files.get(fileId: fileId)
     req.execute @setSafeMetadata
     @
@@ -133,7 +193,11 @@ class App extends Backbone.View
     @
 
   showOpen: =>
-    @$(".open").show()
+    @$(".open.section").show()
+    @
+
+  hideOpen: =>
+    @$(".open.section").hide()
     @
 
   open: =>
