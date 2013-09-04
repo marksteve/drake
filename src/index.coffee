@@ -24,9 +24,10 @@ class App extends Backbone.View
   el: ".app"
 
   events:
-    "click .auth button": =>
+    "click .auth button": ->
       @auth false, @checkAuth
-    "click .pick button": "pick"
+    "click .load button.new": "newSafe"
+    "click .load button.pick": "pick"
     "click .open button": "open"
 
   initialize: =>
@@ -74,7 +75,7 @@ class App extends Backbone.View
   checkAuth: (token) =>
     if token and not token.error
       @hideAuth()
-      @showPick()
+      @showLoad()
     else
       @showAuth()
 
@@ -86,15 +87,15 @@ class App extends Backbone.View
     @$(".auth").hide()
     @
 
+  showLoad: =>
+    @$(".load").show()
+
+  hideLoad: =>
+    @$(".load").hide()
+
   pick: (e) =>
     @picker.setVisible(true)
     @
-
-  showPick: =>
-    @$(".pick").show()
-
-  hidePick: =>
-    @$(".pick").hide()
 
   pickerCb: (data) =>
     switch data[google.picker.Response.ACTION]
@@ -127,7 +128,7 @@ class App extends Backbone.View
 
   setSafeContent: (resp) =>
     @safe.set('content', resp)
-    @hidePick()
+    @hideLoad()
     @showOpen()
     @
 

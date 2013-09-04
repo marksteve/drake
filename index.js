@@ -44,8 +44,6 @@
   })(Backbone.Model);
 
   App = (function(_super) {
-    var _this = this;
-
     __extends(App, _super);
 
     function App() {
@@ -56,9 +54,9 @@
       this.setSafeMetadata = __bind(this.setSafeMetadata, this);
       this.loadSafe = __bind(this.loadSafe, this);
       this.pickerCb = __bind(this.pickerCb, this);
-      this.hidePick = __bind(this.hidePick, this);
-      this.showPick = __bind(this.showPick, this);
       this.pick = __bind(this.pick, this);
+      this.hideLoad = __bind(this.hideLoad, this);
+      this.showLoad = __bind(this.showLoad, this);
       this.hideAuth = __bind(this.hideAuth, this);
       this.showAuth = __bind(this.showAuth, this);
       this.checkAuth = __bind(this.checkAuth, this);
@@ -77,9 +75,10 @@
 
     App.prototype.events = {
       "click .auth button": function() {
-        return App.auth(false, App.checkAuth);
+        return this.auth(false, this.checkAuth);
       },
-      "click .pick button": "pick",
+      "click .load button.new": "newSafe",
+      "click .load button.pick": "pick",
       "click .open button": "open"
     };
 
@@ -134,7 +133,7 @@
     App.prototype.checkAuth = function(token) {
       if (token && !token.error) {
         this.hideAuth();
-        return this.showPick();
+        return this.showLoad();
       } else {
         return this.showAuth();
       }
@@ -150,17 +149,17 @@
       return this;
     };
 
+    App.prototype.showLoad = function() {
+      return this.$(".load").show();
+    };
+
+    App.prototype.hideLoad = function() {
+      return this.$(".load").hide();
+    };
+
     App.prototype.pick = function(e) {
       this.picker.setVisible(true);
       return this;
-    };
-
-    App.prototype.showPick = function() {
-      return this.$(".pick").show();
-    };
-
-    App.prototype.hidePick = function() {
-      return this.$(".pick").hide();
     };
 
     App.prototype.pickerCb = function(data) {
@@ -204,7 +203,7 @@
 
     App.prototype.setSafeContent = function(resp) {
       this.safe.set('content', resp);
-      this.hidePick();
+      this.hideLoad();
       this.showOpen();
       return this;
     };
@@ -222,7 +221,7 @@
 
     return App;
 
-  }).call(this, Backbone.View);
+  })(Backbone.View);
 
   app = new App();
 
