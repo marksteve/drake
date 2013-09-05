@@ -46,6 +46,25 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
   color: #444;
 }
 
+#nprogress {
+  .bar {
+    background: #444;
+  }
+  .peg {
+    box-shadow: 0 0 10px #444, 0 0 5px #444;
+  }
+  .spinner-icon {
+    border: {
+      top: {
+        color: #444;
+      }
+      left: {
+        color: #444;
+      }
+    }
+  }
+}
+
 .prompt-popover-content {
   background-color: #fafafa;
   border: 1px #444 solid;

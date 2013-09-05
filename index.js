@@ -200,6 +200,9 @@
     };
 
     App.prototype.setupPlugins = function() {
+      NProgress.configure({
+        showSpinner: false
+      });
       $(document).ajaxStart(function() {
         return NProgress.start();
       }).ajaxStop(function() {

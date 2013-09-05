@@ -101,6 +101,7 @@ class App extends Backbone.View
     @
 
   setupPlugins: =>
+    NProgress.configure(showSpinner: false)
     $(document)
       .ajaxStart ->
         NProgress.start()
