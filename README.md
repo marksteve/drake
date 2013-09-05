@@ -2,6 +2,8 @@
 
 Password management with Google Drive
 
+## Makefile
+
 ### Build
 
 ```shell
