@@ -32,6 +32,9 @@
 .icon-remove:before {
   content: "\f00d"; }
 
+body {
+  background: url(/images/drivesafe.png) no-repeat center 50px; }
+
 body, input, select, textarea {
   font-family: Roboto; }
 
@@ -49,17 +52,10 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
   border-top-color: #444;
   border-left-color: #444; }
 
-.prompt-popover-content {
-  background-color: #fafafa;
-  border: 1px #444 solid;
-  padding: 1em; }
-
 .app {
   width: 100%;
   max-width: 800px;
-  margin: 0 auto; }
-  .app h1 {
-    border-bottom: 1px #444 solid; }
+  margin: 50px auto; }
   .app button, .app input[type=text], .app input[type=password] {
     line-height: 1.5em;
     padding: 0 5px; }
@@ -70,7 +66,7 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
       border-color: #ccc; }
   .app button {
     border: 1px #444 solid;
-    background-color: #444;
+    background: #444;
     color: white; }
   .app .section {
     display: none; }
@@ -81,12 +77,14 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
   .app .entries > ul {
     margin-right: -3.4%; }
   .app .entries .search {
+    background: rgba(255, 255, 255, 0.6);
     box-sizing: border-box;
     font-size: 120%;
     width: 100%;
     display: block;
     padding: 0 0.5em; }
   .app .entries .entry {
+    background: rgba(255, 255, 255, 0.6);
     box-sizing: border-box;
     display: inline-block;
     width: 30%;
