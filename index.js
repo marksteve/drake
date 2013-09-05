@@ -130,6 +130,7 @@
     __extends(App, _super);
 
     function App() {
+      this.genPass = __bind(this.genPass, this);
       this.renderEntries = __bind(this.renderEntries, this);
       this.showEntries = __bind(this.showEntries, this);
       this.open = __bind(this.open, this);
@@ -185,7 +186,8 @@
         return this.showLoad();
       },
       "click .load button.pick": "pick",
-      "click .open button": "open"
+      "click .open button": "open",
+      "click .genpass": "genPass"
     };
 
     App.prototype.multipartBody = function(boundary, metadata, contentType, data) {
@@ -397,6 +399,11 @@
           el: reactive(Templates.entry, entry).el
         }).el);
       });
+    };
+
+    App.prototype.genPass = function() {
+      this.$(".genpass-output").text(uid(40));
+      return this;
     };
 
     return App;

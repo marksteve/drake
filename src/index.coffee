@@ -79,6 +79,7 @@ class App extends Backbone.View
       @showLoad()
     "click .load button.pick": "pick"
     "click .open button": "open"
+    "click .genpass": "genPass"
 
   multipartBody: (boundary, metadata, contentType, data) ->
     """
@@ -256,6 +257,10 @@ class App extends Backbone.View
         model: entry
         el: reactive(Templates.entry, entry).el
       ).el)
+
+  genPass: =>
+    @$(".genpass-output").text(uid(40))
+    @
 
 
 module.exports = new App()

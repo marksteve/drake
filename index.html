@@ -57,8 +57,26 @@
       </div>
       <div class="entries section">
         <input type="text" placeholder="Search entries" class="search">
+        <p>
+          <button class="new-entry">
+            <i class="icon-plus"></i>
+            New Entry
+          </button>
+          <button class="sync" disabled="disabled">
+            <i class="icon-loop"></i>
+            Synced
+          </button>
+          <button class="genpass">
+            <i class="icon-dice"></i>
+            Generate Password
+          </button>
+          <span class="genpass-output"></span>
+        </p>
         <ul>
           <li class="entry" id="{ id }">
+            <a href="#" class="trash">
+              <i class="icon-remove"></i>
+            </a>
             <h2>{ title }</h2>
             <ul class="details">
               <li>
