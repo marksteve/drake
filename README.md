@@ -1,18 +1,20 @@
 # DriveSafe
 
-## Build
+Password management with Google Drive
+
+### Build
 
 ```shell
 make
 ```
 
-## Develop
+### Develop
 
 ```shell
 watch make  # https://github.com/visionmedia/watch
 ```
 
-## Serve locally
+### Serve locally
 
 ```shell
 make serve  # https://github.com/visionmedia/serve
