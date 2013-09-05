@@ -559,7 +559,7 @@ table {
   content: "\f00d"; }
 
 body {
-  background: url(/images/drivesafe.png) no-repeat center 50px; }
+  background: url("drivesafe/./../../images/drivesafe.png") no-repeat center 50px; }
 
 body, input, select, textarea {
   font-family: Roboto; }
