@@ -77,6 +77,7 @@
     __extends(Safe, _super);
 
     function Safe() {
+      this.update = __bind(this.update, this);
       this.open = __bind(this.open, this);
       _ref3 = Safe.__super__.constructor.apply(this, arguments);
       return _ref3;
@@ -84,13 +85,20 @@
 
     Safe.prototype.open = function(password) {
       var entries;
+      this.set("password", password);
       try {
         entries = sjcl.decrypt(password, this.get("ciphertext"));
       } catch (_error) {
         return false;
       }
-      this.set("entries", new SafeEntries(JSON.parse(entries)));
+      this.entries.reset(JSON.parse(entries));
       return true;
+    };
+
+    Safe.prototype.update = function() {
+      var data;
+      data = JSON.stringify(this.entries.toJSON());
+      return this.set("ciphertext", sjcl.encrypt(this.get("password"), data));
     };
 
     return Safe;
@@ -131,7 +139,10 @@
 
     function App() {
       this.genPass = __bind(this.genPass, this);
+      this.toggleSync = __bind(this.toggleSync, this);
+      this.newEntry = __bind(this.newEntry, this);
       this.renderEntries = __bind(this.renderEntries, this);
+      this.renderEntry = __bind(this.renderEntry, this);
       this.showEntries = __bind(this.showEntries, this);
       this.open = __bind(this.open, this);
       this.hideOpen = __bind(this.hideOpen, this);
@@ -187,6 +198,7 @@
       },
       "click .load button.pick": "pick",
       "click .open button": "open",
+      "click .new-entry": "newEntry",
       "click .genpass": "genPass"
     };
 
@@ -195,8 +207,12 @@
     };
 
     App.prototype.initialize = function() {
-      this.safe = new Safe();
-      this.safe.on("change:entries", this.renderEntries);
+      this.safe = new Safe({
+        synced: true
+      });
+      this.safe.on("change:synced", this.toggleSync);
+      this.safe.entries = new SafeEntries();
+      this.safe.entries.on("add", this.renderEntry).on("reset", this.renderEntries);
       this.setupPlugins();
       return this;
     };
@@ -390,15 +406,37 @@
       return this.$(".entries").show();
     };
 
+    App.prototype.renderEntry = function(entry) {
+      this.$(".entries > ul").append(new SafeEntryView({
+        model: entry,
+        el: reactive(Templates.entry.cloneNode(true), entry).el
+      }).$el);
+      return this;
+    };
+
     App.prototype.renderEntries = function() {
-      var $entries;
-      $entries = this.$(".entries ul");
-      return this.safe.get("entries").each(function(entry) {
-        return $entries.append(new SafeEntryView({
-          model: entry,
-          el: reactive(Templates.entry, entry).el
-        }).el);
+      this.safe.entries.each(this.renderEntry);
+      return this;
+    };
+
+    App.prototype.newEntry = function() {
+      var entry;
+      this.safe.set("synced", false);
+      entry = new SafeEntry({
+        id: uid(20),
+        title: "New Entry",
+        username: "",
+        password: uid(40),
+        url: "http://"
       });
+      this.safe.entries.add(entry);
+      return this;
+    };
+
+    App.prototype.toggleSync = function() {
+      var synced;
+      synced = this.safe.get("synced");
+      return this.$(".sync").prop("disabled", synced).find("span").text(synced ? "Synced" : "Sync");
     };
 
     App.prototype.genPass = function() {

@@ -34,12 +34,17 @@ class SafeEntries extends Backbone.Collection
 class Safe extends Backbone.Model
 
   open: (password) =>
+    @set("password", password)
     try
       entries = sjcl.decrypt(password, @get("ciphertext"))
     catch
       return false
-    @set("entries", new SafeEntries(JSON.parse(entries)))
+    @entries.reset(JSON.parse(entries))
     return true
+
+  update: =>
+    data = JSON.stringify(@entries.toJSON())
+    @set("ciphertext", sjcl.encrypt(@get("password"), data))
 
 
 class SafeEntryView extends Backbone.View
@@ -79,6 +84,7 @@ class App extends Backbone.View
       @showLoad()
     "click .load button.pick": "pick"
     "click .open button": "open"
+    "click .new-entry": "newEntry"
     "click .genpass": "genPass"
 
   multipartBody: (boundary, metadata, contentType, data) ->
@@ -96,8 +102,12 @@ class App extends Backbone.View
     """
 
   initialize: =>
-    @safe = new Safe()
-    @safe.on("change:entries", @renderEntries)
+    @safe = new Safe(synced: true)
+    @safe.on("change:synced", @toggleSync)
+    @safe.entries = new SafeEntries()
+    @safe.entries
+      .on("add", @renderEntry)
+      .on("reset", @renderEntries)
     @setupPlugins()
     @
 
@@ -250,13 +260,34 @@ class App extends Backbone.View
   showEntries: =>
     @$(".entries").show()
 
+  renderEntry: (entry) =>
+    @$(".entries > ul").append(new SafeEntryView(
+      model: entry
+      el: reactive(Templates.entry.cloneNode(true), entry).el
+    ).$el)
+    @
+
   renderEntries: =>
-    $entries = @$(".entries ul")
-    @safe.get("entries").each (entry) ->
-      $entries.append(new SafeEntryView(
-        model: entry
-        el: reactive(Templates.entry, entry).el
-      ).el)
+    @safe.entries.each(@renderEntry)
+    @
+
+  newEntry: =>
+    @safe.set("synced", false)
+    entry = new SafeEntry
+      id: uid(20)
+      title: "New Entry"
+      username: ""
+      password: uid(40)
+      url: "http://"
+    @safe.entries.add(entry)
+    @
+
+  toggleSync: =>
+    synced = @safe.get("synced")
+    @$(".sync")
+      .prop("disabled", synced)
+      .find("span")
+        .text(if synced then "Synced" else "Sync")
 
   genPass: =>
     @$(".genpass-output").text(uid(40))
