@@ -11,6 +11,14 @@ reactive = require "reactive"
 reactive.subscribe (obj, prop, fn) -> obj.on("change:#{prop}", fn)
 reactive.set (obj, prop) -> obj.set(prop)
 reactive.get (obj, prop) -> obj.get(prop)
+reactive.bind "data-text", (el, name) ->
+  obj = @obj
+  el.innerText = obj.get(name)
+  el.onblur = -> obj.set(name, el.innerText)
+reactive.bind "data-value", (el, name) ->
+  obj = @obj
+  el.value = obj.get(name)
+  el.onchange = -> obj.set(name, el.value)
 
 
 Config =
@@ -45,6 +53,7 @@ class Safe extends Backbone.Model
   update: =>
     data = JSON.stringify(@entries.toJSON())
     @set("ciphertext", sjcl.encrypt(@get("password"), data))
+    @
 
 
 class SafeEntryView extends Backbone.View
@@ -65,6 +74,7 @@ class SafeEntryView extends Backbone.View
   trash: =>
     @model.set("trashed", true)
     @remove()
+    @
 
 
 class App extends Backbone.View
@@ -90,28 +100,17 @@ class App extends Backbone.View
     "click .load button.pick": "pick"
     "click .open button": "open"
     "click .new-entry": "newEntry"
+    "click .sync": "sync"
     "click .genpass": "genPass"
 
-  multipartBody: (boundary, metadata, contentType, data) ->
-    """
-    --#{boundary}
-    Content-Type: application/json
-
-    #{JSON.stringify(metadata)}
-    --#{boundary}
-    Content-Type: #{contentType}
-    Content-Transfer-Encoding: base64
-
-    #{btoa(data)}
-    --#{boundary}--
-    """
-
   initialize: =>
-    @safe = new Safe(synced: true)
-    @safe.on("change:synced", @toggleSync)
+    @safe = new Safe(status: "synced")
+    @safe.on("change:status", @toggleSync)
     @safe.entries = new SafeEntries()
     @safe.entries
+      .on("add", @listenEntry)
       .on("add", @renderEntry)
+      .on("reset", @listenEntries)
       .on("reset", @renderEntries)
     @setupPlugins()
     @
@@ -173,40 +172,73 @@ class App extends Backbone.View
 
   showLoad: =>
     @$(".load.section").show()
+    @
 
   hideLoad: =>
     @$(".load.section").hide()
+    @
 
   showNew: =>
     @$(".new.section").show()
+    @
 
   hideNew: =>
     @$(".new.section").hide()
+    @
 
-  newSafe: (name, password) =>
-    safe = [
-      id: uid(20)
-      title: "Example"
-      url: "http://example.com"
-      username: "username"
-      password: "password"
-    ]
+  multipartBody: (boundary, metadata, contentType, data) ->
+    """
+    --#{boundary}
+    Content-Type: application/json
+
+    #{JSON.stringify(metadata)}
+    --#{boundary}
+    Content-Type: #{contentType}
+    Content-Transfer-Encoding: base64
+
+    #{btoa(data)}
+    --#{boundary}--
+    """
+
+  getSafeReq: (method) =>
+    path = "/upload/drive/v2/files"
+    if method == "PUT"
+      path += "/#{@safe.get("id")}"
     boundary = uid()
     contentType = "application/json"
     metadata =
-      title: "#{name}.safe"
+      title: @safe.get("title")
       mimeType: contentType
-    data = sjcl.encrypt(password, JSON.stringify(safe))
-    req = gapi.client.request
-      path: "/upload/drive/v2/files"
-      method: "POST"
+    gapi.client.request
+      path: path
+      method: method
       params:
         uploadType: "multipart"
       headers:
         "Content-Type": "multipart/mixed; boundary=#{boundary}"
       body:
-        @multipartBody(boundary, metadata, contentType, data)
-    req.execute @setSafeMetadata
+        @multipartBody(
+          boundary,
+          metadata,
+          contentType,
+          @safe.get("ciphertext"))
+
+  newSafe: (name, password) =>
+    @safe.entries.reset([
+      id: uid(20)
+      title: "Example"
+      url: "http://example.com"
+      username: "username"
+      password: "password"
+    ], silent: true)
+    @safe
+      .set
+        title: "#{name}.safe"
+        password: password
+      .update()
+    req = @getSafeReq("POST")
+    req.execute(@setSafeMetadata)
+    @
 
   pick: =>
     @picker.setVisible(true)
@@ -221,7 +253,7 @@ class App extends Backbone.View
 
   getSafeMetadata: (fileId) =>
     req = gapi.client.drive.files.get(fileId: fileId)
-    req.execute @setSafeMetadata
+    req.execute(@setSafeMetadata)
     @
 
   setSafeMetadata: (metadata) =>
@@ -265,6 +297,15 @@ class App extends Backbone.View
   showEntries: =>
     @$(".entries").show()
 
+  listenEntry: (entry) =>
+    safe = @safe
+    entry.on("change", -> safe.set("status", "needSync"))
+    @
+
+  listenEntries: (entries) =>
+    entries.each(@listenEntry)
+    @
+
   renderEntry: (entry) =>
     unless entry.get("trashed")
       @$(".entries > ul").append(new SafeEntryView(
@@ -273,12 +314,12 @@ class App extends Backbone.View
       ).$el)
     @
 
-  renderEntries: =>
-    @safe.entries.each(@renderEntry)
+  renderEntries: (entries) =>
+    entries.each(@renderEntry)
     @
 
   newEntry: =>
-    @safe.set("synced", false)
+    @safe.set("status", "needSync")
     entry = new SafeEntry
       id: uid(20)
       title: "New Entry"
@@ -289,11 +330,30 @@ class App extends Backbone.View
     @
 
   toggleSync: =>
-    synced = @safe.get("synced")
+    status = @safe.get("status")
     @$(".sync")
-      .prop("disabled", synced)
+      .prop("disabled", status != "needSync")
       .find("span")
-        .text(if synced then "Synced" else "Sync")
+        .text(
+          switch status
+            when "needSync" then "Sync"
+            when "syncing" then "Syncing"
+            when "synced" then "Synced"
+        )
+    @
+
+  sync: =>
+    @safe
+      .set("status", "syncing")
+      .update()
+    req = @getSafeReq("PUT")
+    req.execute(@updateSafeMetadata)
+    @
+
+  updateSafeMetadata: (metadata) =>
+    @safe.set(metadata)
+    @safe.set("status", "synced")
+    @
 
   genPass: =>
     @$(".genpass-output").text(uid(40))

@@ -33,6 +33,24 @@
     return obj.get(prop);
   });
 
+  reactive.bind("data-text", function(el, name) {
+    var obj;
+    obj = this.obj;
+    el.innerText = obj.get(name);
+    return el.onblur = function() {
+      return obj.set(name, el.innerText);
+    };
+  });
+
+  reactive.bind("data-value", function(el, name) {
+    var obj;
+    obj = this.obj;
+    el.value = obj.get(name);
+    return el.onchange = function() {
+      return obj.set(name, el.value);
+    };
+  });
+
   Config = {
     clientId: "671657367079.apps.googleusercontent.com"
   };
@@ -98,7 +116,8 @@
     Safe.prototype.update = function() {
       var data;
       data = JSON.stringify(this.entries.toJSON());
-      return this.set("ciphertext", sjcl.encrypt(this.get("password"), data));
+      this.set("ciphertext", sjcl.encrypt(this.get("password"), data));
+      return this;
     };
 
     return Safe;
@@ -134,7 +153,8 @@
 
     SafeEntryView.prototype.trash = function() {
       this.model.set("trashed", true);
-      return this.remove();
+      this.remove();
+      return this;
     };
 
     return SafeEntryView;
@@ -146,10 +166,14 @@
 
     function App() {
       this.genPass = __bind(this.genPass, this);
+      this.updateSafeMetadata = __bind(this.updateSafeMetadata, this);
+      this.sync = __bind(this.sync, this);
       this.toggleSync = __bind(this.toggleSync, this);
       this.newEntry = __bind(this.newEntry, this);
       this.renderEntries = __bind(this.renderEntries, this);
       this.renderEntry = __bind(this.renderEntry, this);
+      this.listenEntries = __bind(this.listenEntries, this);
+      this.listenEntry = __bind(this.listenEntry, this);
       this.showEntries = __bind(this.showEntries, this);
       this.open = __bind(this.open, this);
       this.hideOpen = __bind(this.hideOpen, this);
@@ -161,6 +185,7 @@
       this.pickerCb = __bind(this.pickerCb, this);
       this.pick = __bind(this.pick, this);
       this.newSafe = __bind(this.newSafe, this);
+      this.getSafeReq = __bind(this.getSafeReq, this);
       this.hideNew = __bind(this.hideNew, this);
       this.showNew = __bind(this.showNew, this);
       this.hideLoad = __bind(this.hideLoad, this);
@@ -206,20 +231,17 @@
       "click .load button.pick": "pick",
       "click .open button": "open",
       "click .new-entry": "newEntry",
+      "click .sync": "sync",
       "click .genpass": "genPass"
-    };
-
-    App.prototype.multipartBody = function(boundary, metadata, contentType, data) {
-      return "--" + boundary + "\nContent-Type: application/json\n\n" + (JSON.stringify(metadata)) + "\n--" + boundary + "\nContent-Type: " + contentType + "\nContent-Transfer-Encoding: base64\n\n" + (btoa(data)) + "\n--" + boundary + "--";
     };
 
     App.prototype.initialize = function() {
       this.safe = new Safe({
-        synced: true
+        status: "synced"
       });
-      this.safe.on("change:synced", this.toggleSync);
+      this.safe.on("change:status", this.toggleSync);
       this.safe.entries = new SafeEntries();
-      this.safe.entries.on("add", this.renderEntry).on("reset", this.renderEntries);
+      this.safe.entries.on("add", this.listenEntry).on("add", this.renderEntry).on("reset", this.listenEntries).on("reset", this.renderEntries);
       this.setupPlugins();
       return this;
     };
@@ -291,24 +313,57 @@
     };
 
     App.prototype.showLoad = function() {
-      return this.$(".load.section").show();
+      this.$(".load.section").show();
+      return this;
     };
 
     App.prototype.hideLoad = function() {
-      return this.$(".load.section").hide();
+      this.$(".load.section").hide();
+      return this;
     };
 
     App.prototype.showNew = function() {
-      return this.$(".new.section").show();
+      this.$(".new.section").show();
+      return this;
     };
 
     App.prototype.hideNew = function() {
-      return this.$(".new.section").hide();
+      this.$(".new.section").hide();
+      return this;
+    };
+
+    App.prototype.multipartBody = function(boundary, metadata, contentType, data) {
+      return "--" + boundary + "\nContent-Type: application/json\n\n" + (JSON.stringify(metadata)) + "\n--" + boundary + "\nContent-Type: " + contentType + "\nContent-Transfer-Encoding: base64\n\n" + (btoa(data)) + "\n--" + boundary + "--";
+    };
+
+    App.prototype.getSafeReq = function(method) {
+      var boundary, contentType, metadata, path;
+      path = "/upload/drive/v2/files";
+      if (method === "PUT") {
+        path += "/" + (this.safe.get("id"));
+      }
+      boundary = uid();
+      contentType = "application/json";
+      metadata = {
+        title: this.safe.get("title"),
+        mimeType: contentType
+      };
+      return gapi.client.request({
+        path: path,
+        method: method,
+        params: {
+          uploadType: "multipart"
+        },
+        headers: {
+          "Content-Type": "multipart/mixed; boundary=" + boundary
+        },
+        body: this.multipartBody(boundary, metadata, contentType, this.safe.get("ciphertext"))
+      });
     };
 
     App.prototype.newSafe = function(name, password) {
-      var boundary, contentType, data, metadata, req, safe;
-      safe = [
+      var req;
+      this.safe.entries.reset([
         {
           id: uid(20),
           title: "Example",
@@ -316,26 +371,16 @@
           username: "username",
           password: "password"
         }
-      ];
-      boundary = uid();
-      contentType = "application/json";
-      metadata = {
-        title: "" + name + ".safe",
-        mimeType: contentType
-      };
-      data = sjcl.encrypt(password, JSON.stringify(safe));
-      req = gapi.client.request({
-        path: "/upload/drive/v2/files",
-        method: "POST",
-        params: {
-          uploadType: "multipart"
-        },
-        headers: {
-          "Content-Type": "multipart/mixed; boundary=" + boundary
-        },
-        body: this.multipartBody(boundary, metadata, contentType, data)
+      ], {
+        silent: true
       });
-      return req.execute(this.setSafeMetadata);
+      this.safe.set({
+        title: "" + name + ".safe",
+        password: password
+      }).update();
+      req = this.getSafeReq("POST");
+      req.execute(this.setSafeMetadata);
+      return this;
     };
 
     App.prototype.pick = function() {
@@ -413,6 +458,20 @@
       return this.$(".entries").show();
     };
 
+    App.prototype.listenEntry = function(entry) {
+      var safe;
+      safe = this.safe;
+      entry.on("change", function() {
+        return safe.set("status", "needSync");
+      });
+      return this;
+    };
+
+    App.prototype.listenEntries = function(entries) {
+      entries.each(this.listenEntry);
+      return this;
+    };
+
     App.prototype.renderEntry = function(entry) {
       if (!entry.get("trashed")) {
         this.$(".entries > ul").append(new SafeEntryView({
@@ -423,14 +482,14 @@
       return this;
     };
 
-    App.prototype.renderEntries = function() {
-      this.safe.entries.each(this.renderEntry);
+    App.prototype.renderEntries = function(entries) {
+      entries.each(this.renderEntry);
       return this;
     };
 
     App.prototype.newEntry = function() {
       var entry;
-      this.safe.set("synced", false);
+      this.safe.set("status", "needSync");
       entry = new SafeEntry({
         id: uid(20),
         title: "New Entry",
@@ -443,9 +502,33 @@
     };
 
     App.prototype.toggleSync = function() {
-      var synced;
-      synced = this.safe.get("synced");
-      return this.$(".sync").prop("disabled", synced).find("span").text(synced ? "Synced" : "Sync");
+      var status;
+      status = this.safe.get("status");
+      this.$(".sync").prop("disabled", status !== "needSync").find("span").text((function() {
+        switch (status) {
+          case "needSync":
+            return "Sync";
+          case "syncing":
+            return "Syncing";
+          case "synced":
+            return "Synced";
+        }
+      })());
+      return this;
+    };
+
+    App.prototype.sync = function() {
+      var req;
+      this.safe.set("status", "syncing").update();
+      req = this.getSafeReq("PUT");
+      req.execute(this.updateSafeMetadata);
+      return this;
+    };
+
+    App.prototype.updateSafeMetadata = function(metadata) {
+      this.safe.set(metadata);
+      this.safe.set("status", "synced");
+      return this;
     };
 
     App.prototype.genPass = function() {

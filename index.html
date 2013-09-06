@@ -77,19 +77,19 @@
             <a href="#" class="trash">
               <i class="icon-remove"></i>
             </a>
-            <h2>{ title }</h2>
+            <h2 contenteditable="true" data-text="title"></h2>
             <ul class="details">
               <li>
                 <label for="{ id }-username">Username</label>
-                <input id="{ id }-username" type="text" class="username" value="{ username }">
+                <input id="{ id }-username" type="text" class="username" data-value="username">
               </li>
               <li>
                 <label for="{ id }-password">Password</label>
-                <input id="{ id }-password" type="password" class="password" value="{ password }">
+                <input id="{ id }-password" type="password" class="password" data-value="password">
               </li>
               <li>
                 <label for="{ id }-url">URL</label>
-                <input id="{ id }-url" type="text" class="url" value="{ url }">
+                <input id="{ id }-url" type="text" class="url" data-value="url">
               </li>
             </ul>
           </li>

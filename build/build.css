@@ -632,7 +632,7 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
     padding: 1em;
     border: 1px #444 solid; }
     .app .entries .entry h2 {
-      margin-top: 0; }
+      margin: 0 20px 0 0; }
     .app .entries .entry .trash {
       text-decoration: none;
       color: #ddd;
