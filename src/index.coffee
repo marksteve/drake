@@ -343,6 +343,7 @@ class App extends Backbone.View
     @
 
   sync: =>
+    NProgress.start()
     @safe
       .set("status", "syncing")
       .update()
@@ -351,6 +352,7 @@ class App extends Backbone.View
     @
 
   updateSafeMetadata: (metadata) =>
+    NProgress.done()
     @safe.set(metadata)
     @safe.set("status", "synced")
     @

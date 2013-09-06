@@ -34703,6 +34703,7 @@ require.register("drivesafe/index.js", function(exports, require, module){
 
     App.prototype.sync = function() {
       var req;
+      NProgress.start();
       this.safe.set("status", "syncing").update();
       req = this.getSafeReq("PUT");
       req.execute(this.updateSafeMetadata);
@@ -34710,6 +34711,7 @@ require.register("drivesafe/index.js", function(exports, require, module){
     };
 
     App.prototype.updateSafeMetadata = function(metadata) {
+      NProgress.done();
       this.safe.set(metadata);
       this.safe.set("status", "synced");
       return this;
