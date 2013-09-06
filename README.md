@@ -14,13 +14,13 @@ Password management with Google Drive
 ### Continually build if changes are detected
 
 ```shell
-watch make  # https://github.com/visionmedia/watch
+$ watch make  # https://github.com/visionmedia/watch
 ```
 
 ### Serve locally
 
 ```shell
-serve  # https://github.com/visionmedia/serve
+$ serve  # https://github.com/visionmedia/serve
 ```
 
 ## License
