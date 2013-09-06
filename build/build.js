@@ -34865,10 +34865,13 @@ require.register("drake/index.js", function(exports, require, module){
     };
 
     App.prototype.newEntry = function() {
-      var entry;
+      var entry, id;
       this.safe.set("status", "needSync");
+      while (this.safe.entries.get(id)) {
+        id = uid(20);
+      }
       entry = new Models.Entry({
-        id: uid(20),
+        id: id,
         title: "New Entry",
         username: "",
         password: uid(40),

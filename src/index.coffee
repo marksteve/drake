@@ -391,8 +391,10 @@ class Views.App extends Backbone.View
 
   newEntry: =>
     @safe.set("status", "needSync")
+    while @safe.entries.get(id)
+      id = uid(20)
     entry = new Models.Entry
-      id: uid(20)
+      id: id
       title: "New Entry"
       username: ""
       password: uid(40)
