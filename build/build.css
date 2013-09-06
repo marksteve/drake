@@ -633,7 +633,7 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
     padding: 0; }
   .app .entries > ul {
     margin-right: -3.4%; }
-  .app .entries .search {
+  .app .entries .filter {
     background: rgba(255, 255, 255, 0.6);
     box-sizing: border-box;
     font-size: 120%;
