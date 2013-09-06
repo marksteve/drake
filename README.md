@@ -1,6 +1,8 @@
 # Drake
 
-Password management with Google Drive
+Password management with Google Drive.
+
+Keep your passwords in "chests" that are stored and synced to your Google Drive account.
 
 ## Features
 
@@ -24,6 +26,7 @@ $ serve  # https://github.com/visionmedia/serve
 ```
 
 ## License
+
 http://marksteve.mit-license.org
 
 ## Drake?
