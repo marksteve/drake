@@ -109,6 +109,7 @@
     __extends(SafeEntryView, _super);
 
     function SafeEntryView() {
+      this.trash = __bind(this.trash, this);
       this.hidePasword = __bind(this.hidePasword, this);
       this.showPassword = __bind(this.showPassword, this);
       _ref4 = SafeEntryView.__super__.constructor.apply(this, arguments);
@@ -117,7 +118,8 @@
 
     SafeEntryView.prototype.events = {
       "focus .password": "showPassword",
-      "blur .password": "hidePasword"
+      "blur .password": "hidePasword",
+      "click .trash": "trash"
     };
 
     SafeEntryView.prototype.showPassword = function() {
@@ -128,6 +130,11 @@
     SafeEntryView.prototype.hidePasword = function() {
       this.$(".password").attr("type", "password");
       return this;
+    };
+
+    SafeEntryView.prototype.trash = function() {
+      this.model.set("trashed", true);
+      return this.remove();
     };
 
     return SafeEntryView;
@@ -407,10 +414,12 @@
     };
 
     App.prototype.renderEntry = function(entry) {
-      this.$(".entries > ul").append(new SafeEntryView({
-        model: entry,
-        el: reactive(Templates.entry.cloneNode(true), entry).el
-      }).$el);
+      if (!entry.get("trashed")) {
+        this.$(".entries > ul").append(new SafeEntryView({
+          model: entry,
+          el: reactive(Templates.entry.cloneNode(true), entry).el
+        }).$el);
+      }
       return this;
     };
 

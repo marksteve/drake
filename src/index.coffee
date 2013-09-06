@@ -52,6 +52,7 @@ class SafeEntryView extends Backbone.View
   events:
     "focus .password": "showPassword"
     "blur .password": "hidePasword"
+    "click .trash": "trash"
 
   showPassword: =>
     @$(".password").attr("type", "text")
@@ -60,6 +61,10 @@ class SafeEntryView extends Backbone.View
   hidePasword: =>
     @$(".password").attr("type", "password")
     @
+
+  trash: =>
+    @model.set("trashed", true)
+    @remove()
 
 
 class App extends Backbone.View
@@ -261,10 +266,11 @@ class App extends Backbone.View
     @$(".entries").show()
 
   renderEntry: (entry) =>
-    @$(".entries > ul").append(new SafeEntryView(
-      model: entry
-      el: reactive(Templates.entry.cloneNode(true), entry).el
-    ).$el)
+    unless entry.get("trashed")
+      @$(".entries > ul").append(new SafeEntryView(
+        model: entry
+        el: reactive(Templates.entry.cloneNode(true), entry).el
+      ).$el)
     @
 
   renderEntries: =>
