@@ -28,4 +28,5 @@ http://marksteve.mit-license.org
 
 ## Drake?
 
-Drive. Drake. [Francis Drake](http://en.wikipedia.org/wiki/Francis_Drake).
+Treasure chests can be locked and hold valuable items.
+Drive. Dr... Drake. [Francis Drake](http://en.wikipedia.org/wiki/Francis_Drake).
