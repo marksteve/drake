@@ -145,6 +145,8 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
     .app .entries .entry .details li {
       margin-bottom: 1em; }
     .app .entries .entry .details label, .app .entries .entry .details input[type=text], .app .entries .entry .details input[type=password] {
+      box-sizing: border-box;
+      width: 100%;
       display: block; }
   .app .footer {
     color: #bbb;

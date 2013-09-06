@@ -181,6 +181,8 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
           margin-bottom: 1em;
         }
         label, input[type=text], input[type=password] {
+          box-sizing: border-box;
+          width: 100%;
           display: block;
         }
       }
