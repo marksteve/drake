@@ -108,6 +108,9 @@ class Views.App extends Backbone.View
       @showLoad()
     "click .load button.pick": "pick"
     "click .open button": "open"
+    "keyup .filter": "filterEntries"
+    "blur .filter": "filterEntries"
+    "change .filter": "filterEntries"
     "click .new-entry": "newEntry"
     "click .sync": "sync"
     "click .genpass": "genPass"
@@ -349,6 +352,8 @@ class Views.App extends Backbone.View
 
   renderEntry: (entry) =>
     unless entry.get("trashed")
+      if @filter and not @filter.test(entry.get("title"))
+        return
       @$(".entries > ul").append(new Views.Entry(
         model: entry
         el: reactive(Templates.entry.cloneNode(true), entry).el
@@ -356,7 +361,13 @@ class Views.App extends Backbone.View
     @
 
   renderEntries: (entries) =>
+    @$(".entries > ul").empty()
     entries.each(@renderEntry)
+    @
+
+  filterEntries: =>
+    @filter = new RegExp(@$(".filter").val().trim(), "i")
+    @renderEntries(@safe.entries)
     @
 
   newEntry: =>

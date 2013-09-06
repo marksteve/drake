@@ -181,6 +181,7 @@
       this.sync = __bind(this.sync, this);
       this.toggleSync = __bind(this.toggleSync, this);
       this.newEntry = __bind(this.newEntry, this);
+      this.filterEntries = __bind(this.filterEntries, this);
       this.renderEntries = __bind(this.renderEntries, this);
       this.renderEntry = __bind(this.renderEntry, this);
       this.listenEntries = __bind(this.listenEntries, this);
@@ -242,6 +243,9 @@
       },
       "click .load button.pick": "pick",
       "click .open button": "open",
+      "keyup .filter": "filterEntries",
+      "blur .filter": "filterEntries",
+      "change .filter": "filterEntries",
       "click .new-entry": "newEntry",
       "click .sync": "sync",
       "click .genpass": "genPass"
@@ -516,6 +520,9 @@
 
     App.prototype.renderEntry = function(entry) {
       if (!entry.get("trashed")) {
+        if (this.filter && !this.filter.test(entry.get("title"))) {
+          return;
+        }
         this.$(".entries > ul").append(new Views.Entry({
           model: entry,
           el: reactive(Templates.entry.cloneNode(true), entry).el
@@ -525,7 +532,14 @@
     };
 
     App.prototype.renderEntries = function(entries) {
+      this.$(".entries > ul").empty();
       entries.each(this.renderEntry);
+      return this;
+    };
+
+    App.prototype.filterEntries = function() {
+      this.filter = new RegExp(this.$(".filter").val().trim(), "i");
+      this.renderEntries(this.safe.entries);
       return this;
     };
 
