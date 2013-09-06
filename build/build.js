@@ -34371,7 +34371,11 @@ require.register("drivesafe/index.js", function(exports, require, module){
     el.remove();
   }
 
-  Models = Collections = Views = {};
+  Models = {};
+
+  Collections = {};
+
+  Views = {};
 
   Models.Safe = (function(_super) {
     __extends(Safe, _super);
@@ -34766,7 +34770,6 @@ require.register("drivesafe/index.js", function(exports, require, module){
     };
 
     App.prototype.downloadSafe = function() {
-      console.log("Downloading " + (this.safe.get("downloadUrl")) + "...");
       $.ajax({
         url: this.safe.get("downloadUrl"),
         type: "get",
@@ -34831,7 +34834,7 @@ require.register("drivesafe/index.js", function(exports, require, module){
     App.prototype.newEntry = function() {
       var entry;
       this.safe.set("status", "needSync");
-      entry = new Views.Entry({
+      entry = new Models.Entry({
         id: uid(20),
         title: "New Entry",
         username: "",

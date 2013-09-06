@@ -39,7 +39,9 @@ for el in _(Templates).values()
 
 # App
 
-Models = Collections = Views = {}
+Models = {}
+Collections = {}
+Views = {}
 
 class Models.Safe extends Backbone.Model
 
@@ -310,7 +312,6 @@ class Views.App extends Backbone.View
     @
 
   downloadSafe: =>
-    console.log "Downloading #{@safe.get("downloadUrl")}..."
     $.ajax
       url: @safe.get("downloadUrl")
       type: "get"
@@ -360,7 +361,7 @@ class Views.App extends Backbone.View
 
   newEntry: =>
     @safe.set("status", "needSync")
-    entry = new Views.Entry
+    entry = new Models.Entry
       id: uid(20)
       title: "New Entry"
       username: ""
