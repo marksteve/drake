@@ -34383,6 +34383,7 @@ require.register("drivesafe/index.js", function(exports, require, module){
       this.loadDrive = __bind(this.loadDrive, this);
       this.load = __bind(this.load, this);
       this.setupPlugins = __bind(this.setupPlugins, this);
+      this.error = __bind(this.error, this);
       this.initialize = __bind(this.initialize, this);
       _ref5 = App.__super__.constructor.apply(this, arguments);
       return _ref5;
@@ -34428,6 +34429,22 @@ require.register("drivesafe/index.js", function(exports, require, module){
       this.safe.entries.on("add", this.listenEntry).on("add", this.renderEntry).on("reset", this.listenEntries).on("reset", this.renderEntries);
       this.setupPlugins();
       return this;
+    };
+
+    App.prototype.error = function(message) {
+      var $error;
+      $error = this.$(".error");
+      if (this.errTimeout) {
+        clearTimeout(this.errTimeout);
+      }
+      if (message != null) {
+        $error.show().find("span").text(message);
+        return this.errTimeout = setTimeout(function() {
+          return $error.hide();
+        }, 3000);
+      } else {
+        return $error.hide();
+      }
     };
 
     App.prototype.setupPlugins = function() {
@@ -34606,7 +34623,7 @@ require.register("drivesafe/index.js", function(exports, require, module){
           "Authorization": "Bearer " + (gapi.auth.getToken().access_token)
         }
       }).done(this.setSafeContent).fail(function() {
-        return console.error("Failed to download safe");
+        return this.error("Failed to download safe");
       });
       return this;
     };
@@ -34630,10 +34647,13 @@ require.register("drivesafe/index.js", function(exports, require, module){
 
     App.prototype.open = function() {
       var password;
+      this.error();
       password = this.$(".open input[type=password]").val();
       if (this.safe.open(password)) {
         this.hideOpen();
         this.showEntries();
+      } else {
+        this.error("Failed to open safe");
       }
       return this;
     };

@@ -115,6 +115,18 @@ class App extends Backbone.View
     @setupPlugins()
     @
 
+  error: (message) =>
+    $error = @$(".error")
+    if @errTimeout
+      clearTimeout(@errTimeout)
+    if message?
+      $error.show().find("span").text(message)
+      @errTimeout = setTimeout ->
+        $error.hide()
+      , 3000
+    else
+      $error.hide()
+
   setupPlugins: =>
     NProgress.configure(showSpinner: false)
     $(document)
@@ -270,7 +282,7 @@ class App extends Backbone.View
         "Authorization": "Bearer #{gapi.auth.getToken().access_token}"
     .done(@setSafeContent)
     .fail ->
-      console.error "Failed to download safe"
+      @error("Failed to download safe")
     @
 
   setSafeContent: (resp) =>
@@ -288,10 +300,13 @@ class App extends Backbone.View
     @
 
   open: =>
+    @error()
     password = @$(".open input[type=password]").val()
     if @safe.open(password)
       @hideOpen()
       @showEntries()
+    else
+      @error("Failed to open safe")
     @
 
   showEntries: =>

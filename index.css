@@ -67,7 +67,8 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
 .app {
   width: 100%;
   max-width: 800px;
-  margin: 50px auto; }
+  margin: 50px auto;
+  position: relative; }
   .app button, .app input[type=text], .app input[type=password] {
     line-height: 1.5em;
     padding: 0 5px; }
@@ -82,6 +83,17 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
     color: white; }
     .app button:disabled {
       color: #bbb; }
+  .app .error {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    text-align: center;
+    display: none; }
+    .app .error span {
+      display: inline-block;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 5px 10px; }
   .app .section {
     display: none; }
   .app .entries ul {
