@@ -9,6 +9,12 @@ Keep your passwords in "chests" that are stored and synced to your Google Drive 
 * Sharing with permissions thru Google Drive.
 * Client-side encryption (uses SJCL).
 
+## Deploy
+
+Drake is just a bunch of static files. There are no server-side components so
+you can take advantage of Github Pages to deploy it from your own repo. Just
+fork it.
+
 ## Develop
 
 ### Continually build if changes are detected
