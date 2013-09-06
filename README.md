@@ -2,15 +2,16 @@
 
 Password management with Google Drive
 
-## Makefile
+## Features
 
-### Build
+* Nothing to install. All you need is a modern browser.
+* Syncs with Google Drive.
+* Sharing with permissions thru Google Drive.
+* Client-side encryption (uses SJCL).
 
-```shell
-make
-```
+## Develop
 
-### Develop
+### Continually build if changes are detected
 
 ```shell
 watch make  # https://github.com/visionmedia/watch
@@ -19,7 +20,7 @@ watch make  # https://github.com/visionmedia/watch
 ### Serve locally
 
 ```shell
-make serve  # https://github.com/visionmedia/serve
+serve  # https://github.com/visionmedia/serve
 ```
 
 ## License
