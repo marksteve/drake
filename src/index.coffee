@@ -224,19 +224,37 @@ class Views.App extends Backbone.View
     @
 
   auth: (immediate, cb) =>
-    gapi.auth.authorize
+    config =
       client_id: Config.clientId
-      scope: "https://www.googleapis.com/auth/drive"
-      immediate: immediate
-    , cb
+      scope: [
+        "https://www.googleapis.com/auth/userinfo.email"
+        "https://www.googleapis.com/auth/drive"
+      ]
+      display: "popup"
+    if immediate
+      config.immediate = immediate
+    else
+      config.prompt = "select_account"
+    gapi.auth.authorize(config, cb)
     @
 
   checkAuth: (token) =>
     if token and not token.error
+      req = gapi.client.request
+        path: "/oauth2/v1/userinfo"
+        method: "GET"
+      req.execute(@showLoggedIn)
       @hideAuth()
       @showLoad()
     else
       @showAuth()
+    @
+
+  showLoggedIn: (user) =>
+    @$(".logged-in")
+      .show()
+      .find(".email")
+        .text(user.email)
     @
 
   multipartBody: (boundary, metadata, contentType, data) ->
@@ -315,6 +333,7 @@ class Views.App extends Backbone.View
     @
 
   downloadSafe: =>
+    # TODO: Just use gapi for this
     $.ajax
       url: @safe.get("downloadUrl")
       type: "get"

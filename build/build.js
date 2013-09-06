@@ -34497,6 +34497,7 @@ require.register("drake/index.js", function(exports, require, module){
       this.pick = __bind(this.pick, this);
       this.newSafe = __bind(this.newSafe, this);
       this.getSafeReq = __bind(this.getSafeReq, this);
+      this.showLoggedIn = __bind(this.showLoggedIn, this);
       this.checkAuth = __bind(this.checkAuth, this);
       this.auth = __bind(this.auth, this);
       this.buildPicker = __bind(this.buildPicker, this);
@@ -34674,21 +34675,39 @@ require.register("drake/index.js", function(exports, require, module){
     };
 
     App.prototype.auth = function(immediate, cb) {
-      gapi.auth.authorize({
+      var config;
+      config = {
         client_id: Config.clientId,
-        scope: "https://www.googleapis.com/auth/drive",
-        immediate: immediate
-      }, cb);
+        scope: ["https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/drive"],
+        display: "popup"
+      };
+      if (immediate) {
+        config.immediate = immediate;
+      } else {
+        config.prompt = "select_account";
+      }
+      gapi.auth.authorize(config, cb);
       return this;
     };
 
     App.prototype.checkAuth = function(token) {
+      var req;
       if (token && !token.error) {
+        req = gapi.client.request({
+          path: "/oauth2/v1/userinfo",
+          method: "GET"
+        });
+        req.execute(this.showLoggedIn);
         this.hideAuth();
         this.showLoad();
       } else {
         this.showAuth();
       }
+      return this;
+    };
+
+    App.prototype.showLoggedIn = function(user) {
+      this.$(".logged-in").show().find(".email").text(user.email);
       return this;
     };
 

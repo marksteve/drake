@@ -45,7 +45,7 @@
 .icon.genpass:before {
   content: "\e009";
 }
-.icon.switch:before {
+.icon.select:before {
   content: "\f057";
 }
 
@@ -124,6 +124,18 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
       color: white;
       padding: 5px 10px;
     }
+  }
+  .logged-in {
+    display: none;
+    position: absolute;
+    top: 7px;
+    right: 0;
+    color: #aaa;
+    border: 1px solid;
+    background: white;
+    padding: 0 10px;
+    line-height: 30px;
+    font-size: 14px;
   }
   .section {
     display: none;
