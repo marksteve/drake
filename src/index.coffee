@@ -43,7 +43,7 @@ Models = {}
 Collections = {}
 Views = {}
 
-class Models.Safe extends Backbone.Model
+class Models.Chest extends Backbone.Model
 
   open: (password) =>
     @set("password", password)
@@ -102,7 +102,7 @@ class Views.App extends Backbone.View
       unless (name and password)
         return
       @hideNew()
-      @newSafe(name, password)
+      @newChest(name, password)
     "click .new button.cancel": ->
       @hideNew()
       @showLoad()
@@ -116,10 +116,10 @@ class Views.App extends Backbone.View
     "click .genpass": "genPass"
 
   initialize: =>
-    @safe = new Models.Safe(status: "synced")
-    @safe.on("change:status", @toggleSync)
-    @safe.entries = new Collections.Entries()
-    @safe.entries
+    @chest = new Models.Chest(status: "synced")
+    @chest.on("change:status", @toggleSync)
+    @chest.entries = new Collections.Entries()
+    @chest.entries
       .on("add", @listenEntry)
       .on("add", @renderEntry)
       .on("reset", @listenEntries)
@@ -271,14 +271,14 @@ class Views.App extends Backbone.View
     --#{boundary}--
     """
 
-  getSafeReq: (method) =>
+  getChestReq: (method) =>
     path = "/upload/drive/v2/files"
     if method == "PUT"
-      path += "/#{@safe.get("id")}"
+      path += "/#{@chest.get("id")}"
     boundary = uid()
     contentType = "application/json"
     metadata =
-      title: @safe.get("title")
+      title: @chest.get("title")
       mimeType: contentType
     gapi.client.request
       path: path
@@ -292,23 +292,23 @@ class Views.App extends Backbone.View
           boundary,
           metadata,
           contentType,
-          @safe.get("ciphertext"))
+          @chest.get("ciphertext"))
 
-  newSafe: (name, password) =>
-    @safe.entries.reset([
+  newChest: (name, password) =>
+    @chest.entries.reset([
       id: uid(20)
       title: "Example"
       url: "http://example.com"
       username: "username"
       password: "password"
     ], silent: true)
-    @safe
+    @chest
       .set
-        title: "#{name}.safe"
+        title: "#{name}.chest"
         password: password
       .update()
-    req = @getSafeReq("POST")
-    req.execute(@setSafeMetadata)
+    req = @getChestReq("POST")
+    req.execute(@setChestMetadata)
     @
 
   pick: =>
@@ -319,33 +319,33 @@ class Views.App extends Backbone.View
     switch data[google.picker.Response.ACTION]
       when google.picker.Action.PICKED
         fileId = data[google.picker.Response.DOCUMENTS][0].id
-        @getSafeMetadata(fileId)
+        @getChestMetadata(fileId)
     @
 
-  getSafeMetadata: (fileId) =>
+  getChestMetadata: (fileId) =>
     req = gapi.client.drive.files.get(fileId: fileId)
-    req.execute(@setSafeMetadata)
+    req.execute(@setChestMetadata)
     @
 
-  setSafeMetadata: (metadata) =>
-    @safe.set(metadata)
-    @downloadSafe()
+  setChestMetadata: (metadata) =>
+    @chest.set(metadata)
+    @downloadChest()
     @
 
-  downloadSafe: =>
+  downloadChest: =>
     # TODO: Just use gapi for this
     $.ajax
-      url: @safe.get("downloadUrl")
+      url: @chest.get("downloadUrl")
       type: "get"
       headers:
         "Authorization": "Bearer #{gapi.auth.getToken().access_token}"
-    .done(@setSafeContent)
+    .done(@setChestContent)
     .fail ->
-      @error("Failed to download safe")
+      @error("Failed to download chest")
     @
 
-  setSafeContent: (resp) =>
-    @safe.set("ciphertext", JSON.stringify(resp))
+  setChestContent: (resp) =>
+    @chest.set("ciphertext", JSON.stringify(resp))
     @hideLoad()
     @showOpen()
     @
@@ -353,16 +353,16 @@ class Views.App extends Backbone.View
   open: =>
     @error()
     password = @$(".open .password").val()
-    if @safe.open(password)
+    if @chest.open(password)
       @hideOpen()
       @showEntries()
     else
-      @error("Failed to open safe")
+      @error("Failed to open chest")
     @
 
   listenEntry: (entry) =>
-    safe = @safe
-    entry.on("change", -> safe.set("status", "needSync"))
+    chest = @chest
+    entry.on("change", -> chest.set("status", "needSync"))
     @
 
   listenEntries: (entries) =>
@@ -386,12 +386,12 @@ class Views.App extends Backbone.View
 
   filterEntries: =>
     @filter = new RegExp(@$(".filter").val().trim(), "i")
-    @renderEntries(@safe.entries)
+    @renderEntries(@chest.entries)
     @
 
   newEntry: =>
-    @safe.set("status", "needSync")
-    while @safe.entries.get(id)
+    @chest.set("status", "needSync")
+    while @chest.entries.get(id)
       id = uid(20)
     entry = new Models.Entry
       id: id
@@ -399,11 +399,11 @@ class Views.App extends Backbone.View
       username: ""
       password: uid(40)
       url: "http://"
-    @safe.entries.add(entry)
+    @chest.entries.add(entry)
     @
 
   toggleSync: =>
-    status = @safe.get("status")
+    status = @chest.get("status")
     @$(".sync")
       .prop("disabled", status != "needSync")
       .find("span")
@@ -417,17 +417,17 @@ class Views.App extends Backbone.View
 
   sync: =>
     NProgress.start()
-    @safe
+    @chest
       .set("status", "syncing")
       .update()
-    req = @getSafeReq("PUT")
-    req.execute(@updateSafeMetadata)
+    req = @getChestReq("PUT")
+    req.execute(@updateChestMetadata)
     @
 
-  updateSafeMetadata: (metadata) =>
+  updateChestMetadata: (metadata) =>
     NProgress.done()
-    @safe.set(metadata)
-    @safe.set("status", "synced")
+    @chest.set(metadata)
+    @chest.set("status", "synced")
     @
 
   genPass: =>

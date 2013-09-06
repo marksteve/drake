@@ -34377,17 +34377,17 @@ require.register("drake/index.js", function(exports, require, module){
 
   Views = {};
 
-  Models.Safe = (function(_super) {
-    __extends(Safe, _super);
+  Models.Chest = (function(_super) {
+    __extends(Chest, _super);
 
-    function Safe() {
+    function Chest() {
       this.update = __bind(this.update, this);
       this.open = __bind(this.open, this);
-      _ref1 = Safe.__super__.constructor.apply(this, arguments);
+      _ref1 = Chest.__super__.constructor.apply(this, arguments);
       return _ref1;
     }
 
-    Safe.prototype.open = function(password) {
+    Chest.prototype.open = function(password) {
       var entries;
       this.set("password", password);
       try {
@@ -34399,14 +34399,14 @@ require.register("drake/index.js", function(exports, require, module){
       return true;
     };
 
-    Safe.prototype.update = function() {
+    Chest.prototype.update = function() {
       var data;
       data = JSON.stringify(this.entries.toJSON());
       this.set("ciphertext", sjcl.encrypt(this.get("password"), data));
       return this;
     };
 
-    return Safe;
+    return Chest;
 
   })(Backbone.Model);
 
@@ -34479,7 +34479,7 @@ require.register("drake/index.js", function(exports, require, module){
 
     function App() {
       this.genPass = __bind(this.genPass, this);
-      this.updateSafeMetadata = __bind(this.updateSafeMetadata, this);
+      this.updateChestMetadata = __bind(this.updateChestMetadata, this);
       this.sync = __bind(this.sync, this);
       this.toggleSync = __bind(this.toggleSync, this);
       this.newEntry = __bind(this.newEntry, this);
@@ -34489,14 +34489,14 @@ require.register("drake/index.js", function(exports, require, module){
       this.listenEntries = __bind(this.listenEntries, this);
       this.listenEntry = __bind(this.listenEntry, this);
       this.open = __bind(this.open, this);
-      this.setSafeContent = __bind(this.setSafeContent, this);
-      this.downloadSafe = __bind(this.downloadSafe, this);
-      this.setSafeMetadata = __bind(this.setSafeMetadata, this);
-      this.getSafeMetadata = __bind(this.getSafeMetadata, this);
+      this.setChestContent = __bind(this.setChestContent, this);
+      this.downloadChest = __bind(this.downloadChest, this);
+      this.setChestMetadata = __bind(this.setChestMetadata, this);
+      this.getChestMetadata = __bind(this.getChestMetadata, this);
       this.pickerCb = __bind(this.pickerCb, this);
       this.pick = __bind(this.pick, this);
-      this.newSafe = __bind(this.newSafe, this);
-      this.getSafeReq = __bind(this.getSafeReq, this);
+      this.newChest = __bind(this.newChest, this);
+      this.getChestReq = __bind(this.getChestReq, this);
       this.showLoggedIn = __bind(this.showLoggedIn, this);
       this.checkAuth = __bind(this.checkAuth, this);
       this.auth = __bind(this.auth, this);
@@ -34538,7 +34538,7 @@ require.register("drake/index.js", function(exports, require, module){
           return;
         }
         this.hideNew();
-        return this.newSafe(name, password);
+        return this.newChest(name, password);
       },
       "click .new button.cancel": function() {
         this.hideNew();
@@ -34555,12 +34555,12 @@ require.register("drake/index.js", function(exports, require, module){
     };
 
     App.prototype.initialize = function() {
-      this.safe = new Models.Safe({
+      this.chest = new Models.Chest({
         status: "synced"
       });
-      this.safe.on("change:status", this.toggleSync);
-      this.safe.entries = new Collections.Entries();
-      this.safe.entries.on("add", this.listenEntry).on("add", this.renderEntry).on("reset", this.listenEntries).on("reset", this.renderEntries);
+      this.chest.on("change:status", this.toggleSync);
+      this.chest.entries = new Collections.Entries();
+      this.chest.entries.on("add", this.listenEntry).on("add", this.renderEntry).on("reset", this.listenEntries).on("reset", this.renderEntries);
       this.setupPlugins();
       return this;
     };
@@ -34715,16 +34715,16 @@ require.register("drake/index.js", function(exports, require, module){
       return "--" + boundary + "\nContent-Type: application/json\n\n" + (JSON.stringify(metadata)) + "\n--" + boundary + "\nContent-Type: " + contentType + "\nContent-Transfer-Encoding: base64\n\n" + (btoa(data)) + "\n--" + boundary + "--";
     };
 
-    App.prototype.getSafeReq = function(method) {
+    App.prototype.getChestReq = function(method) {
       var boundary, contentType, metadata, path;
       path = "/upload/drive/v2/files";
       if (method === "PUT") {
-        path += "/" + (this.safe.get("id"));
+        path += "/" + (this.chest.get("id"));
       }
       boundary = uid();
       contentType = "application/json";
       metadata = {
-        title: this.safe.get("title"),
+        title: this.chest.get("title"),
         mimeType: contentType
       };
       return gapi.client.request({
@@ -34736,13 +34736,13 @@ require.register("drake/index.js", function(exports, require, module){
         headers: {
           "Content-Type": "multipart/mixed; boundary=" + boundary
         },
-        body: this.multipartBody(boundary, metadata, contentType, this.safe.get("ciphertext"))
+        body: this.multipartBody(boundary, metadata, contentType, this.chest.get("ciphertext"))
       });
     };
 
-    App.prototype.newSafe = function(name, password) {
+    App.prototype.newChest = function(name, password) {
       var req;
-      this.safe.entries.reset([
+      this.chest.entries.reset([
         {
           id: uid(20),
           title: "Example",
@@ -34753,12 +34753,12 @@ require.register("drake/index.js", function(exports, require, module){
       ], {
         silent: true
       });
-      this.safe.set({
-        title: "" + name + ".safe",
+      this.chest.set({
+        title: "" + name + ".chest",
         password: password
       }).update();
-      req = this.getSafeReq("POST");
-      req.execute(this.setSafeMetadata);
+      req = this.getChestReq("POST");
+      req.execute(this.setChestMetadata);
       return this;
     };
 
@@ -34772,41 +34772,41 @@ require.register("drake/index.js", function(exports, require, module){
       switch (data[google.picker.Response.ACTION]) {
         case google.picker.Action.PICKED:
           fileId = data[google.picker.Response.DOCUMENTS][0].id;
-          this.getSafeMetadata(fileId);
+          this.getChestMetadata(fileId);
       }
       return this;
     };
 
-    App.prototype.getSafeMetadata = function(fileId) {
+    App.prototype.getChestMetadata = function(fileId) {
       var req;
       req = gapi.client.drive.files.get({
         fileId: fileId
       });
-      req.execute(this.setSafeMetadata);
+      req.execute(this.setChestMetadata);
       return this;
     };
 
-    App.prototype.setSafeMetadata = function(metadata) {
-      this.safe.set(metadata);
-      this.downloadSafe();
+    App.prototype.setChestMetadata = function(metadata) {
+      this.chest.set(metadata);
+      this.downloadChest();
       return this;
     };
 
-    App.prototype.downloadSafe = function() {
+    App.prototype.downloadChest = function() {
       $.ajax({
-        url: this.safe.get("downloadUrl"),
+        url: this.chest.get("downloadUrl"),
         type: "get",
         headers: {
           "Authorization": "Bearer " + (gapi.auth.getToken().access_token)
         }
-      }).done(this.setSafeContent).fail(function() {
-        return this.error("Failed to download safe");
+      }).done(this.setChestContent).fail(function() {
+        return this.error("Failed to download chest");
       });
       return this;
     };
 
-    App.prototype.setSafeContent = function(resp) {
-      this.safe.set("ciphertext", JSON.stringify(resp));
+    App.prototype.setChestContent = function(resp) {
+      this.chest.set("ciphertext", JSON.stringify(resp));
       this.hideLoad();
       this.showOpen();
       return this;
@@ -34816,20 +34816,20 @@ require.register("drake/index.js", function(exports, require, module){
       var password;
       this.error();
       password = this.$(".open .password").val();
-      if (this.safe.open(password)) {
+      if (this.chest.open(password)) {
         this.hideOpen();
         this.showEntries();
       } else {
-        this.error("Failed to open safe");
+        this.error("Failed to open chest");
       }
       return this;
     };
 
     App.prototype.listenEntry = function(entry) {
-      var safe;
-      safe = this.safe;
+      var chest;
+      chest = this.chest;
       entry.on("change", function() {
-        return safe.set("status", "needSync");
+        return chest.set("status", "needSync");
       });
       return this;
     };
@@ -34860,14 +34860,14 @@ require.register("drake/index.js", function(exports, require, module){
 
     App.prototype.filterEntries = function() {
       this.filter = new RegExp(this.$(".filter").val().trim(), "i");
-      this.renderEntries(this.safe.entries);
+      this.renderEntries(this.chest.entries);
       return this;
     };
 
     App.prototype.newEntry = function() {
       var entry, id;
-      this.safe.set("status", "needSync");
-      while (this.safe.entries.get(id)) {
+      this.chest.set("status", "needSync");
+      while (this.chest.entries.get(id)) {
         id = uid(20);
       }
       entry = new Models.Entry({
@@ -34877,13 +34877,13 @@ require.register("drake/index.js", function(exports, require, module){
         password: uid(40),
         url: "http://"
       });
-      this.safe.entries.add(entry);
+      this.chest.entries.add(entry);
       return this;
     };
 
     App.prototype.toggleSync = function() {
       var status;
-      status = this.safe.get("status");
+      status = this.chest.get("status");
       this.$(".sync").prop("disabled", status !== "needSync").find("span").text((function() {
         switch (status) {
           case "needSync":
@@ -34900,16 +34900,16 @@ require.register("drake/index.js", function(exports, require, module){
     App.prototype.sync = function() {
       var req;
       NProgress.start();
-      this.safe.set("status", "syncing").update();
-      req = this.getSafeReq("PUT");
-      req.execute(this.updateSafeMetadata);
+      this.chest.set("status", "syncing").update();
+      req = this.getChestReq("PUT");
+      req.execute(this.updateChestMetadata);
       return this;
     };
 
-    App.prototype.updateSafeMetadata = function(metadata) {
+    App.prototype.updateChestMetadata = function(metadata) {
       NProgress.done();
-      this.safe.set(metadata);
-      this.safe.set("status", "synced");
+      this.chest.set(metadata);
+      this.chest.set("status", "synced");
       return this;
     };
 
