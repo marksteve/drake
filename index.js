@@ -151,7 +151,8 @@
       return this;
     };
 
-    SafeEntryView.prototype.trash = function() {
+    SafeEntryView.prototype.trash = function(e) {
+      e.preventDefault();
       this.model.set("trashed", true);
       this.remove();
       return this;

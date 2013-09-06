@@ -71,7 +71,8 @@ class SafeEntryView extends Backbone.View
     @$(".password").attr("type", "password")
     @
 
-  trash: =>
+  trash: (e) =>
+    e.preventDefault()
     @model.set("trashed", true)
     @remove()
     @
