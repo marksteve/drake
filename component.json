@@ -11,7 +11,9 @@
     "marksteve/sjcl": "*",
     "matthewmueller/uid": "*",
     "component/prompt-popover": "*",
-    "component/reactive": "*"
+    "component/reactive": "*",
+    "segmentio/on-enter": "*",
+    "segmentio/on-escape": "*"
   },
   "scripts": [
     "index.js"

@@ -6,7 +6,17 @@ NProgress = require "nprogress"
 sjcl = require "sjcl"
 uid = require "uid"
 reactive = require "reactive"
+enter = require "on-enter"
+escape = require "on-escape"
 
+
+# Config
+
+Config =
+  clientId: "671657367079.apps.googleusercontent.com"
+
+
+# Reactive templates setup
 
 reactive.subscribe (obj, prop, fn) -> obj.on("change:#{prop}", fn)
 reactive.set (obj, prop) -> obj.set(prop)
@@ -20,10 +30,6 @@ reactive.bind "data-value", (el, name) ->
   el.value = obj.get(name)
   el.onchange = -> obj.set(name, el.value)
 
-
-Config =
-  clientId: "671657367079.apps.googleusercontent.com"
-
 Templates =
     entry: document.querySelector(".entry")
 
@@ -31,15 +37,11 @@ for el in _(Templates).values()
   el.remove()
 
 
-class SafeEntry extends Backbone.Model
+# App
 
+Models = Collections = Views = {}
 
-class SafeEntries extends Backbone.Collection
-
-  model: SafeEntry
-
-
-class Safe extends Backbone.Model
+class Models.Safe extends Backbone.Model
 
   open: (password) =>
     @set("password", password)
@@ -55,8 +57,13 @@ class Safe extends Backbone.Model
     @set("ciphertext", sjcl.encrypt(@get("password"), data))
     @
 
+class Models.Entry extends Backbone.Model
 
-class SafeEntryView extends Backbone.View
+class Collections.Entries extends Backbone.Collection
+
+  model: Models.Entry
+
+class Views.Entry extends Backbone.View
 
   events:
     "focus .password": "showPassword"
@@ -77,8 +84,7 @@ class SafeEntryView extends Backbone.View
     @remove()
     @
 
-
-class App extends Backbone.View
+class Views.App extends Backbone.View
 
   el: ".app"
 
@@ -105,9 +111,9 @@ class App extends Backbone.View
     "click .genpass": "genPass"
 
   initialize: =>
-    @safe = new Safe(status: "synced")
+    @safe = new Models.Safe(status: "synced")
     @safe.on("change:status", @toggleSync)
-    @safe.entries = new SafeEntries()
+    @safe.entries = new Collections.Entries()
     @safe.entries
       .on("add", @listenEntry)
       .on("add", @renderEntry)
@@ -136,6 +142,59 @@ class App extends Backbone.View
       .ajaxStop ->
         NProgress.done()
     @
+
+  showAuth: =>
+    @$(".auth.section").show()
+    @
+
+  hideAuth: =>
+    @$(".auth.section").hide()
+    @
+
+  showLoad: =>
+    @$(".load.section").show()
+    @
+
+  hideLoad: =>
+    @$(".load.section").hide()
+    @
+
+  showNew: =>
+    enter(_.bind ->
+      @$(".new button.ok").trigger("click")
+    , @)
+    escape(_.bind ->
+      @$(".new button.cancel").trigger("click")
+    , @)
+    @$(".new.section")
+      .show()
+      .find(".name")
+        .focus()
+    @
+
+  hideNew: =>
+    enter.unbind()
+    escape.unbind()
+    @$(".new.section").hide()
+    @
+
+  showOpen: =>
+    enter(_.bind ->
+      @$(".open button").trigger("click")
+    , @)
+    @$(".open.section")
+      .show()
+      .find(".password")
+        .focus()
+    @
+
+  hideOpen: =>
+    enter.unbind()
+    @$(".open.section").hide()
+    @
+
+  showEntries: =>
+    @$(".entries").show()
 
   load: =>
     NProgress.start()
@@ -173,30 +232,6 @@ class App extends Backbone.View
       @showLoad()
     else
       @showAuth()
-    @
-
-  showAuth: =>
-    @$(".auth.section").show()
-    @
-
-  hideAuth: =>
-    @$(".auth.section").hide()
-    @
-
-  showLoad: =>
-    @$(".load.section").show()
-    @
-
-  hideLoad: =>
-    @$(".load.section").hide()
-    @
-
-  showNew: =>
-    @$(".new.section").show()
-    @
-
-  hideNew: =>
-    @$(".new.section").hide()
     @
 
   multipartBody: (boundary, metadata, contentType, data) ->
@@ -292,26 +327,15 @@ class App extends Backbone.View
     @showOpen()
     @
 
-  showOpen: =>
-    @$(".open.section").show()
-    @
-
-  hideOpen: =>
-    @$(".open.section").hide()
-    @
-
   open: =>
     @error()
-    password = @$(".open input[type=password]").val()
+    password = @$(".open .password").val()
     if @safe.open(password)
       @hideOpen()
       @showEntries()
     else
       @error("Failed to open safe")
     @
-
-  showEntries: =>
-    @$(".entries").show()
 
   listenEntry: (entry) =>
     safe = @safe
@@ -324,7 +348,7 @@ class App extends Backbone.View
 
   renderEntry: (entry) =>
     unless entry.get("trashed")
-      @$(".entries > ul").append(new SafeEntryView(
+      @$(".entries > ul").append(new Views.Entry(
         model: entry
         el: reactive(Templates.entry.cloneNode(true), entry).el
       ).$el)
@@ -336,7 +360,7 @@ class App extends Backbone.View
 
   newEntry: =>
     @safe.set("status", "needSync")
-    entry = new SafeEntry
+    entry = new Views.Entry
       id: uid(20)
       title: "New Entry"
       username: ""
@@ -378,4 +402,6 @@ class App extends Backbone.View
     @
 
 
-module.exports = new App()
+# Export
+
+module.exports = new Views.App()
