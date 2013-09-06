@@ -575,9 +575,6 @@ table {
 .icon.switch:before {
   content: "\f057"; }
 
-body {
-  background: url("drivesafe/./../../images/drivesafe.png") no-repeat center 50px fixed; }
-
 body, input, select, textarea {
   font-family: Roboto; }
 
@@ -600,6 +597,12 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
   max-width: 800px;
   margin: 50px auto;
   position: relative; }
+  .app h1 {
+    background: url("drake/./../../images/drake.png") no-repeat left 7px;
+    padding-left: 40px; }
+    .app h1 a {
+      text-decoration: none;
+      color: inherit; }
   .app button, .app input[type=text], .app input[type=password] {
     line-height: 1.5em;
     padding: 0 5px; }

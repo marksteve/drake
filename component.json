@@ -1,5 +1,5 @@
 {
-  "name": "drivesafe",
+  "name": "drake",
   "dependencies": {
     "necolas/normalize.css": "*",
     "component/json-fallback": "*",
