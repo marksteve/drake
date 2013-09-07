@@ -143,6 +143,20 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
       padding: 5px 10px;
     }
   }
+  .filter-help {
+    position: absolute;
+    display: none;
+    top: 1em;
+    left: 2em;
+    right: 2em;
+    padding: 0 1em 1em 1em;
+    color: white;
+    h2, h3, h4, h5 {
+      color: white;
+    }
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 10;
+  }
   .logged-in {
     display: none;
     position: absolute;
@@ -160,10 +174,22 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
       list-style: none;
     }
     .filter {
-      display: block;
-      width: 100%;
-      font-size: 120%;
-      padding: 0 0.5em;
+      position: relative;
+      input {
+        display: block;
+        width: 100%;
+        font-size: 120%;
+        padding: 0 0.5em;
+      }
+      .help {
+        font-weight: bold;
+        color: inherit;
+        position: absolute;
+        right: 5px;
+        top: 0;
+        text-decoration: none;
+        line-height: 1.5em;
+      }
     }
     .actions {
       margin: {

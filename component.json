@@ -10,7 +10,6 @@
     "rstacruz/nprogress": "*",
     "marksteve/sjcl": "*",
     "matthewmueller/uid": "*",
-    "component/prompt-popover": "*",
     "component/reactive": "*",
     "segmentio/on-enter": "*",
     "segmentio/on-escape": "*"

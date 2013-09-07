@@ -10,6 +10,22 @@
       <div class="columns">
         <h1><a href="">Drake</a></h1>
         <div class="error"><span></span></div>
+        <div class="filter-help">
+          <h2>Search tips</h2>
+          <h3>You can search by property by prefixing your query with "property:"</h3>
+          <ul>
+            <li>username:john</em></li>
+            <li>url:https://github.com</li>
+          </ul>
+          <h3>You can list trashed entries by using "trashed:" as query.</h3>
+          <ul><li>trashed:</li></ul>
+          <h3>Query are tested as regular expressions.</h3>
+          <ul>
+            <li>er$ <em>&mdash; matches entries with titles that have "er" at the end</em></li>
+            <li>url:com$ <em>&mdash; matches entries with urls that end with "com"</em></li>
+            <li>password:^asdf <em>&mdash; matches entries with passwords that start with "asdf"</em></li>
+          </ul>
+        </div>
         <div class="logged-in">
           <i class="icon auth"></i>
           <span class="email"></span>
@@ -83,7 +99,10 @@
           </p>
         </div>
         <div class="entries section">
-          <input type="text" placeholder="Search entries" class="filter">
+          <div class="filter">
+            <input type="text" placeholder="Search entries">
+            <a href="#" class="help">?</a>
+          </div>
           <div class="actions row">
             <div class="large-2 columns">
               <button class="new-entry">

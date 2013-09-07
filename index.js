@@ -213,6 +213,7 @@
       this.loadPicker = __bind(this.loadPicker, this);
       this.loadDrive = __bind(this.loadDrive, this);
       this.load = __bind(this.load, this);
+      this.toggleFilterHelp = __bind(this.toggleFilterHelp, this);
       this.showEntries = __bind(this.showEntries, this);
       this.hideOpen = __bind(this.hideOpen, this);
       this.showOpen = __bind(this.showOpen, this);
@@ -255,9 +256,11 @@
       },
       "click .load button.pick": "pick",
       "click .open button": "open",
-      "keyup .filter": "filterEntries",
-      "blur .filter": "filterEntries",
-      "change .filter": "filterEntries",
+      "keyup .filter input": "filterEntries",
+      "blur .filter input": "filterEntries",
+      "change .filter input": "filterEntries",
+      "click .filter .help": "toggleFilterHelp",
+      "click .filter-help": "toggleFilterHelp",
       "click .new-entry": "newEntry",
       "click .sync": "sync",
       "click .genpass": "genPass"
@@ -355,7 +358,14 @@
     };
 
     App.prototype.showEntries = function() {
-      return this.$(".entries").show();
+      this.$(".entries").show();
+      return this;
+    };
+
+    App.prototype.toggleFilterHelp = function(e) {
+      e.preventDefault();
+      $(".filter-help").toggle();
+      return this;
     };
 
     App.prototype.load = function() {
@@ -591,7 +601,7 @@
 
     App.prototype.filterEntries = function() {
       var filterVal;
-      filterVal = this.$(".filter").val().trim();
+      filterVal = this.$(".filter input").val().trim();
       if (filterVal.lastIndexOf(":") > 0) {
         this.filterProp = filterVal.split(":")[0];
       } else {

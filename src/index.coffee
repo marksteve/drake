@@ -116,9 +116,11 @@ class Views.App extends Backbone.View
       @showLoad()
     "click .load button.pick": "pick"
     "click .open button": "open"
-    "keyup .filter": "filterEntries"
-    "blur .filter": "filterEntries"
-    "change .filter": "filterEntries"
+    "keyup .filter input": "filterEntries"
+    "blur .filter input": "filterEntries"
+    "change .filter input": "filterEntries"
+    "click .filter .help": "toggleFilterHelp"
+    "click .filter-help": "toggleFilterHelp"
     "click .new-entry": "newEntry"
     "click .sync": "sync"
     "click .genpass": "genPass"
@@ -209,6 +211,12 @@ class Views.App extends Backbone.View
 
   showEntries: =>
     @$(".entries").show()
+    @
+
+  toggleFilterHelp: (e) =>
+    e.preventDefault()
+    $(".filter-help").toggle()
+    @
 
   load: =>
     NProgress.start()
@@ -413,7 +421,7 @@ class Views.App extends Backbone.View
     @
 
   filterEntries: =>
-    filterVal = @$(".filter").val().trim()
+    filterVal = @$(".filter input").val().trim()
     if filterVal.lastIndexOf(":") > 0
       @filterProp = filterVal.split(":")[0]
     else

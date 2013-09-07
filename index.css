@@ -1113,6 +1113,18 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
       background: rgba(0, 0, 0, 0.6);
       color: white;
       padding: 5px 10px; }
+  .app .filter-help {
+    position: absolute;
+    display: none;
+    top: 1em;
+    left: 2em;
+    right: 2em;
+    padding: 0 1em 1em 1em;
+    color: white;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 10; }
+    .app .filter-help h2, .app .filter-help h3, .app .filter-help h4, .app .filter-help h5 {
+      color: white; }
   .app .logged-in {
     display: none;
     position: absolute;
@@ -1127,10 +1139,20 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
   .app .entries ul {
     list-style: none; }
   .app .entries .filter {
-    display: block;
-    width: 100%;
-    font-size: 120%;
-    padding: 0 0.5em; }
+    position: relative; }
+    .app .entries .filter input {
+      display: block;
+      width: 100%;
+      font-size: 120%;
+      padding: 0 0.5em; }
+    .app .entries .filter .help {
+      font-weight: bold;
+      color: inherit;
+      position: absolute;
+      right: 5px;
+      top: 0;
+      text-decoration: none;
+      line-height: 1.5em; }
   .app .entries .actions {
     margin-top: 1em;
     margin-bottom: 1em; }
