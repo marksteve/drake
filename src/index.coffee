@@ -295,6 +295,7 @@ class Views.App extends Backbone.View
           @chest.get("ciphertext"))
 
   newChest: (name, password) =>
+    NProgress.start()
     @chest.entries.reset([
       id: uid(20)
       title: "Example"
@@ -323,6 +324,7 @@ class Views.App extends Backbone.View
     @
 
   getChestMetadata: (fileId) =>
+    NProgress.start()
     req = gapi.client.drive.files.get(fileId: fileId)
     req.execute(@setChestMetadata)
     @
@@ -345,6 +347,7 @@ class Views.App extends Backbone.View
     @
 
   setChestContent: (resp) =>
+    NProgress.done()
     @chest.set("ciphertext", JSON.stringify(resp))
     @hideLoad()
     @showOpen()
@@ -371,8 +374,15 @@ class Views.App extends Backbone.View
 
   renderEntry: (entry) =>
     unless entry.get("trashed")
-      if @filter and not @filter.test(entry.get("title"))
-        return
+      if @filterProp and entry.has(@filterProp)
+        filter = new RegExp(
+          @filter.source.substring(@filterProp.length + 1),
+          "i")
+        if not filter.test(entry.get(@filterProp))
+          return
+      else
+        if @filter and not @filter.test(entry.get("title"))
+          return
       @$(".entries > ul").append(new Views.Entry(
         model: entry
         el: reactive(Templates.entry.cloneNode(true), entry).el
@@ -385,7 +395,12 @@ class Views.App extends Backbone.View
     @
 
   filterEntries: =>
-    @filter = new RegExp(@$(".filter").val().trim(), "i")
+    filterVal = @$(".filter").val().trim()
+    if filterVal.lastIndexOf(":") > 0
+      @filterProp = filterVal.split(":")[0]
+    else
+      @filterProp = null
+    @filter = new RegExp(filterVal, "i")
     @renderEntries(@chest.entries)
     @
 

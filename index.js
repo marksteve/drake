@@ -440,6 +440,7 @@
 
     App.prototype.newChest = function(name, password) {
       var req;
+      NProgress.start();
       this.chest.entries.reset([
         {
           id: uid(20),
@@ -477,6 +478,7 @@
 
     App.prototype.getChestMetadata = function(fileId) {
       var req;
+      NProgress.start();
       req = gapi.client.drive.files.get({
         fileId: fileId
       });
@@ -504,6 +506,7 @@
     };
 
     App.prototype.setChestContent = function(resp) {
+      NProgress.done();
       this.chest.set("ciphertext", JSON.stringify(resp));
       this.hideLoad();
       this.showOpen();
@@ -538,9 +541,17 @@
     };
 
     App.prototype.renderEntry = function(entry) {
+      var filter;
       if (!entry.get("trashed")) {
-        if (this.filter && !this.filter.test(entry.get("title"))) {
-          return;
+        if (this.filterProp && entry.has(this.filterProp)) {
+          filter = new RegExp(this.filter.source.substring(this.filterProp.length + 1), "i");
+          if (!filter.test(entry.get(this.filterProp))) {
+            return;
+          }
+        } else {
+          if (this.filter && !this.filter.test(entry.get("title"))) {
+            return;
+          }
         }
         this.$(".entries > ul").append(new Views.Entry({
           model: entry,
@@ -557,7 +568,14 @@
     };
 
     App.prototype.filterEntries = function() {
-      this.filter = new RegExp(this.$(".filter").val().trim(), "i");
+      var filterVal;
+      filterVal = this.$(".filter").val().trim();
+      if (filterVal.lastIndexOf(":") > 0) {
+        this.filterProp = filterVal.split(":")[0];
+      } else {
+        this.filterProp = null;
+      }
+      this.filter = new RegExp(filterVal, "i");
       this.renderEntries(this.chest.entries);
       return this;
     };
