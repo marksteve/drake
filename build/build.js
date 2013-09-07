@@ -34867,8 +34867,11 @@ require.register("drake/index.js", function(exports, require, module){
     App.prototype.newEntry = function() {
       var entry, id;
       this.chest.set("status", "needSync");
-      while (this.chest.entries.get(id)) {
+      while (true) {
         id = uid(20);
+        if (!this.chest.entries.get(id)) {
+          break;
+        }
       }
       entry = new Models.Entry({
         id: id,

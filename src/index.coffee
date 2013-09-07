@@ -391,8 +391,10 @@ class Views.App extends Backbone.View
 
   newEntry: =>
     @chest.set("status", "needSync")
-    while @chest.entries.get(id)
+    while true
       id = uid(20)
+      unless @chest.entries.get(id)
+        break
     entry = new Models.Entry
       id: id
       title: "New Entry"
