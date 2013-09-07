@@ -108,9 +108,14 @@
           <ul class="small-block-grid-1 large-block-grid-3">
             <li class="entry" id="{ id }">
               <div>
-                <a href="#" class="trash">
-                  <i class="icon trash"></i>
-                </a>
+                <span class="remove">
+                  <a href="#" class="trash" data-hide="trashed">
+                    <i class="icon trash"></i>
+                  </a>
+                  <a href="#" class="delete" data-show="trashed">
+                    <i class="icon delete"></i>
+                  </a>
+                </span>
                 <h2 contenteditable="true" data-text="title"></h2>
                 <ul class="details">
                   <li>

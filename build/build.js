@@ -34440,6 +34440,7 @@ require.register("drake/index.js", function(exports, require, module){
     __extends(Entry, _super);
 
     function Entry() {
+      this["delete"] = __bind(this["delete"], this);
       this.trash = __bind(this.trash, this);
       this.hidePasword = __bind(this.hidePasword, this);
       this.showPassword = __bind(this.showPassword, this);
@@ -34450,7 +34451,8 @@ require.register("drake/index.js", function(exports, require, module){
     Entry.prototype.events = {
       "focus .password": "showPassword",
       "blur .password": "hidePasword",
-      "click .trash": "trash"
+      "click a.trash": "trash",
+      "click a.delete": "delete"
     };
 
     Entry.prototype.showPassword = function() {
@@ -34467,6 +34469,15 @@ require.register("drake/index.js", function(exports, require, module){
       e.preventDefault();
       this.model.set("trashed", true);
       this.remove();
+      return this;
+    };
+
+    Entry.prototype["delete"] = function(e) {
+      e.preventDefault();
+      if (confirm("Are you sure you want to permanently delete this entry?")) {
+        this.model.trigger("remove");
+        this.remove();
+      }
       return this;
     };
 
@@ -34560,7 +34571,7 @@ require.register("drake/index.js", function(exports, require, module){
       });
       this.chest.on("change:status", this.toggleSync);
       this.chest.entries = new Collections.Entries();
-      this.chest.entries.on("add", this.listenEntry).on("add", this.renderEntry).on("reset", this.listenEntries).on("reset", this.renderEntries);
+      this.chest.entries.on("add", this.listenEntry).on("add", this.renderEntry).on("remove", this.removeEntry).on("reset", this.listenEntries).on("reset", this.renderEntries);
       this.setupPlugins();
       return this;
     };
@@ -34833,6 +34844,10 @@ require.register("drake/index.js", function(exports, require, module){
       chest = this.chest;
       entry.on("change", function() {
         return chest.set("status", "needSync");
+      });
+      entry.on("remove", function() {
+        chest.set("status", "needSync");
+        return chest.entries.remove(entry);
       });
       return this;
     };

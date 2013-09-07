@@ -70,7 +70,8 @@ class Views.Entry extends Backbone.View
   events:
     "focus .password": "showPassword"
     "blur .password": "hidePasword"
-    "click .trash": "trash"
+    "click a.trash": "trash"
+    "click a.delete": "delete"
 
   showPassword: =>
     @$(".password").attr("type", "text")
@@ -84,6 +85,13 @@ class Views.Entry extends Backbone.View
     e.preventDefault()
     @model.set("trashed", true)
     @remove()
+    @
+
+  delete: (e) =>
+    e.preventDefault()
+    if confirm("Are you sure you want to permanently delete this entry?")
+      @model.trigger("remove")
+      @remove()
     @
 
 class Views.App extends Backbone.View
@@ -122,6 +130,7 @@ class Views.App extends Backbone.View
     @chest.entries
       .on("add", @listenEntry)
       .on("add", @renderEntry)
+      .on("remove", @removeEntry)
       .on("reset", @listenEntries)
       .on("reset", @renderEntries)
     @setupPlugins()
@@ -365,7 +374,11 @@ class Views.App extends Backbone.View
 
   listenEntry: (entry) =>
     chest = @chest
-    entry.on("change", -> chest.set("status", "needSync"))
+    entry.on "change", ->
+      chest.set("status", "needSync")
+    entry.on "remove", ->
+      chest.set("status", "needSync")
+      chest.entries.remove(entry)
     @
 
   listenEntries: (entries) =>
