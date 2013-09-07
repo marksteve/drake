@@ -6,105 +6,135 @@
     <link rel="stylesheet" href="build/build.css">
   </head>
   <body>
-    <div class="app">
-      <h1><a href="">Drake</a></h1>
-      <div class="error"><span></span></div>
-      <div class="logged-in">
-        <i class="icon auth"></i>
-        <span class="email"></span>
-      </div>
-      <div class="auth section">
-        <p>
-          <button>
-            <i class="icon auth"></i>
-            Login
-          </button>
-        </p>
-      </div>
-      <div class="load section">
-        <p>
-          <button class="new">
-            <i class="icon new"></i>
-            New
-          </button>
-          <button class="pick">
-            <i class="icon pick"></i>
-            Open
-          </button>
-        </p>
-      </div>
-      <div class="new section">
-        <p>
-          <input type="text" class="name" placeholder="Name">
-          .chest
-        </p>
-        <p>
-          <input type="password" class="password" placeholder="Password">
-        </p>
-        <p>
-          <button class="ok">
-            <i class="icon ok"></i>
-            Ok
-          </button>
-          <button class="cancel">
-            <i class="icon cancel"></i>
-            Cancel
-          </button>
-        </p>
-      </div>
-      <div class="open section">
-        <p>
-          <input type="password" class="password" placeholder="Password">
-          <button>
-            <i class="icon open"></i>
-            Open
-          </button>
-        </p>
-      </div>
-      <div class="entries section">
-        <input type="text" placeholder="Search entries" class="filter">
-        <p>
-          <button class="new-entry">
-            <i class="icon new-entry"></i>
-            New Entry
-          </button>
-          <button class="sync" disabled="disabled">
-            <i class="icon sync"></i>
-            <span>Synced</span>
-          </button>
-          <button class="genpass">
-            <i class="icon genpass"></i>
-            Generate Password
-          </button>
-          <span class="genpass-output"></span>
-        </p>
-        <ul>
-          <li class="entry" id="{ id }">
-            <a href="#" class="trash">
-              <i class="icon trash"></i>
-            </a>
-            <h2 contenteditable="true" data-text="title"></h2>
-            <ul class="details">
-              <li>
-                <label for="{ id }-username">Username</label>
-                <input id="{ id }-username" type="text" class="username" data-value="username">
-              </li>
-              <li>
-                <label for="{ id }-password">Password</label>
-                <input id="{ id }-password" type="password" class="password" data-value="password">
-              </li>
-              <li>
-                <label for="{ id }-url">URL</label>
-                <input id="{ id }-url" type="text" class="url" data-value="url">
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </div>
-      <div class="footer">
-        by <a href="https://github.com/marksteve">marksteve</a> &star;
-        repo <a href="https://github.com/marksteve/drake">github</a> &star;
-        license <a href="http://marksteve.mit-license.org">MIT</a>
+    <div class="app row">
+      <div class="columns">
+        <h1><a href="">Drake</a></h1>
+        <div class="error"><span></span></div>
+        <div class="logged-in">
+          <i class="icon auth"></i>
+          <span class="email"></span>
+        </div>
+        <div class="auth section">
+          <div class="actions row">
+            <div class="large-3 columns">
+              <button>
+                <i class="icon auth"></i>
+                Login
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="load section">
+          <p>
+            Create a new chest or pick one from Google Drive.
+          </p>
+          <div class="actions row">
+            <div class="large-3 columns">
+              <button class="new">
+                <i class="icon new"></i>
+                New
+              </button>
+            </div>
+            <div class="large-3 pull-6 columns">
+              <button class="pick">
+                <i class="icon pick"></i>
+                Open
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="new section">
+          <p>
+            Enter file name and password of the chest to be created.
+          </p>
+          <p>
+            <input type="text" class="name" placeholder="Name">
+            .chest
+          </p>
+          <p>
+            <input type="password" class="password" placeholder="Password">
+          </p>
+          <div class="actions row">
+            <div class="large-3 columns">
+              <button class="ok">
+                <i class="icon ok"></i>
+                Ok
+              </button>
+            </div>
+            <div class="large-3 pull-6 columns">
+              <button class="cancel">
+                <i class="icon cancel"></i>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="open section">
+          <p>
+            Open chest by supplying the password entered upon creating the
+            chest.
+          </p>
+          <p>
+            <input type="password" class="password" placeholder="Password">
+            <button>
+              <i class="icon open"></i>
+              Open
+            </button>
+          </p>
+        </div>
+        <div class="entries section">
+          <input type="text" placeholder="Search entries" class="filter">
+          <div class="actions row">
+            <div class="large-2 columns">
+              <button class="new-entry">
+                <i class="icon new-entry"></i>
+                New Entry
+              </button>
+            </div>
+            <div class="large-2 columns">
+              <button class="sync" disabled="disabled">
+                <i class="icon sync"></i>
+                <span>Synced</span>
+              </button>
+            </div>
+            <div class="large-3 columns">
+              <button class="genpass">
+                <i class="icon genpass"></i>
+                Generate Password
+              </button>
+            </div>
+            <div class="genpass-output large-5 columns"></div>
+          </div>
+          <ul class="small-block-grid-1 large-block-grid-3">
+            <li class="entry" id="{ id }">
+              <div>
+                <a href="#" class="trash">
+                  <i class="icon trash"></i>
+                </a>
+                <h2 contenteditable="true" data-text="title"></h2>
+                <ul class="details">
+                  <li>
+                    <label for="{ id }-username">Username</label>
+                    <input id="{ id }-username" type="text" class="username" data-value="username">
+                  </li>
+                  <li>
+                    <label for="{ id }-password">Password</label>
+                    <input id="{ id }-password" type="password" class="password" data-value="password">
+                  </li>
+                  <li>
+                    <label for="{ id }-url">URL</label>
+                    <input id="{ id }-url" type="text" class="url" data-value="url">
+                  </li>
+                </ul>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div class="footer">
+          by <a href="https://github.com/marksteve">marksteve</a> &star;
+          repo <a href="https://github.com/marksteve/drake">github</a> &star;
+          license <a href="http://marksteve.mit-license.org">MIT</a>
+        </div>
       </div>
     </div>
     <script src="https://www.google.com/jsapi"></script>
