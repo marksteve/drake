@@ -373,20 +373,25 @@ class Views.App extends Backbone.View
     @
 
   renderEntry: (entry) =>
-    unless entry.get("trashed")
-      if @filterProp and entry.has(@filterProp)
+    if @filterProp != "trashed" and entry.get("trashed")
+      return
+    if @filterProp and entry.has(@filterProp)
+      if @filterProp == "trashed"
+        if not entry.get("trashed")
+          return
+      else
         filter = new RegExp(
           @filter.source.substring(@filterProp.length + 1),
           "i")
         if not filter.test(entry.get(@filterProp))
           return
-      else
-        if @filter and not @filter.test(entry.get("title"))
-          return
-      @$(".entries > ul").append(new Views.Entry(
-        model: entry
-        el: reactive(Templates.entry.cloneNode(true), entry).el
-      ).$el)
+    else
+      if @filter and not @filter.test(entry.get("title"))
+        return
+    @$(".entries > ul").append(new Views.Entry(
+      model: entry
+      el: reactive(Templates.entry.cloneNode(true), entry).el
+    ).$el)
     @
 
   renderEntries: (entries) =>

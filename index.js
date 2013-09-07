@@ -542,22 +542,29 @@
 
     App.prototype.renderEntry = function(entry) {
       var filter;
-      if (!entry.get("trashed")) {
-        if (this.filterProp && entry.has(this.filterProp)) {
+      if (this.filterProp !== "trashed" && entry.get("trashed")) {
+        return;
+      }
+      if (this.filterProp && entry.has(this.filterProp)) {
+        if (this.filterProp === "trashed") {
+          if (!entry.get("trashed")) {
+            return;
+          }
+        } else {
           filter = new RegExp(this.filter.source.substring(this.filterProp.length + 1), "i");
           if (!filter.test(entry.get(this.filterProp))) {
             return;
           }
-        } else {
-          if (this.filter && !this.filter.test(entry.get("title"))) {
-            return;
-          }
         }
-        this.$(".entries > ul").append(new Views.Entry({
-          model: entry,
-          el: reactive(Templates.entry.cloneNode(true), entry).el
-        }).$el);
+      } else {
+        if (this.filter && !this.filter.test(entry.get("title"))) {
+          return;
+        }
       }
+      this.$(".entries > ul").append(new Views.Entry({
+        model: entry,
+        el: reactive(Templates.entry.cloneNode(true), entry).el
+      }).$el);
       return this;
     };
 
