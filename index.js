@@ -366,7 +366,7 @@
       this.chest.on("change:status", this.toggleSync);
       this.chest.entries = new Collections.Entries();
       this.chest.entries.on("add", this.listenEntry).on("add", this.renderEntry).on("remove", this.removeEntry).on("reset", this.listenEntries).on("reset", this.renderEntries);
-      this.genpass = new Views.GenPass({
+      this.genPass = new Views.GenPass({
         model: new Models.GenPassSettings()
       });
       this.setupPlugins();

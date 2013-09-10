@@ -185,7 +185,7 @@ class Views.App extends Backbone.View
       .on("remove", @removeEntry)
       .on("reset", @listenEntries)
       .on("reset", @renderEntries)
-    @genpass = new Views.GenPass(model: new Models.GenPassSettings())
+    @genPass = new Views.GenPass(model: new Models.GenPassSettings())
     @setupPlugins()
     @
 
