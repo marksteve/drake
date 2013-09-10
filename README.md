@@ -7,7 +7,8 @@ Keep your passwords in "chests" that are stored and synced to your Google Drive 
 * Nothing to install. All you need is a modern browser.
 * Syncs with Google Drive.
 * Sharing with permissions thru Google Drive.
-* Client-side encryption (uses SJCL).
+* Client-side encryption with https://github.com/bitwiseshiftleft/sjcl
+* Password generator using https://github.com/rstacruz/passwordgen.js
 
 ## Deploy
 
