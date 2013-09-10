@@ -12,7 +12,8 @@
     "matthewmueller/uid": "*",
     "component/reactive": "*",
     "segmentio/on-enter": "*",
-    "segmentio/on-escape": "*"
+    "segmentio/on-escape": "*",
+    "rstacruz/passwordgen.js": "*"
   },
   "scripts": [
     "index.js"

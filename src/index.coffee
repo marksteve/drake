@@ -8,6 +8,7 @@ uid = require "uid"
 reactive = require "reactive"
 enter = require "on-enter"
 escape = require "on-escape"
+gen = (require "passwordgen")(Math.random)
 
 
 # Config
@@ -29,6 +30,10 @@ reactive.bind "data-value", (el, name) ->
   obj = @obj
   el.value = obj.get(name)
   el.onchange = -> obj.set(name, el.value)
+reactive.bind "data-checked", (el, name) ->
+  obj = @obj
+  el.checked = Boolean(obj.get(name))
+  el.onchange = -> obj.set(name, el.checked)
 
 Templates =
     entry: document.querySelector(".entry")
@@ -42,6 +47,21 @@ for el in _(Templates).values()
 Models = {}
 Collections = {}
 Views = {}
+
+class Models.Entry extends Backbone.Model
+
+class Collections.Entries extends Backbone.Collection
+
+  model: Models.Entry
+
+class Models.GenPassSettings extends Backbone.Model
+
+  defaults:
+    type: "Chars"
+    length: 30
+    numbers: true
+    letters: true
+    symbols: false
 
 class Models.Chest extends Backbone.Model
 
@@ -58,12 +78,6 @@ class Models.Chest extends Backbone.Model
     data = JSON.stringify(@entries.toJSON())
     @set("ciphertext", sjcl.encrypt(@get("password"), data))
     @
-
-class Models.Entry extends Backbone.Model
-
-class Collections.Entries extends Backbone.Collection
-
-  model: Models.Entry
 
 class Views.Entry extends Backbone.View
 
@@ -94,6 +108,43 @@ class Views.Entry extends Backbone.View
       @remove()
     @
 
+class Views.GenPass extends Backbone.View
+
+  el: ".genpass"
+
+  events:
+    "click button": "output"
+    "click .icon-settings": "toggleSettings"
+
+  initialize: =>
+    reactive(@el, @model)
+    @
+
+  generate: =>
+    type = @model.get("type")
+    func = switch type
+      when "Chars" then "generate"
+      when "Words" then "words"
+    res = gen[type][func](
+      @model.get("length"),
+      numbers: @model.get("numbers")
+      letters: @model.get("letters")
+      symbols: @model.get("symbols")
+    )
+    switch type
+      when "Chars" then res
+      when "Words" then res.join(" ")
+
+  output: =>
+    @$(".output").text(@generate())
+    @
+
+  toggleSettings: (e) =>
+    e.preventDefault()
+    e.stopPropagation()
+    @$(".settings").toggle()
+    @
+
 class Views.App extends Backbone.View
 
   el: ".app"
@@ -101,20 +152,20 @@ class Views.App extends Backbone.View
   events:
     "click .auth button": ->
       @auth false, @checkAuth
-    "click .load button.new": ->
+    "click .load .new": ->
       @hideLoad()
       @showNew()
-    "click .new button.ok": ->
+    "click .new .ok": ->
       name = @$(".new .name").val().trim()
       password = @$(".new .password").val()
       unless (name and password)
         return
       @hideNew()
       @newChest(name, password)
-    "click .new button.cancel": ->
+    "click .new .cancel": ->
       @hideNew()
       @showLoad()
-    "click .load button.pick": "pick"
+    "click .load .pick": "pick"
     "click .open button": "open"
     "keyup .filter input": "filterEntries"
     "blur .filter input": "filterEntries"
@@ -123,7 +174,6 @@ class Views.App extends Backbone.View
     "click .filter-help": "toggleFilterHelp"
     "click .new-entry": "newEntry"
     "click .sync": "sync"
-    "click .genpass": "genPass"
 
   initialize: =>
     @chest = new Models.Chest(status: "synced")
@@ -135,6 +185,7 @@ class Views.App extends Backbone.View
       .on("remove", @removeEntry)
       .on("reset", @listenEntries)
       .on("reset", @renderEntries)
+    @genpass = new Views.GenPass(model: new Models.GenPassSettings())
     @setupPlugins()
     @
 
@@ -177,10 +228,10 @@ class Views.App extends Backbone.View
 
   showNew: =>
     enter(_.bind ->
-      @$(".new button.ok").trigger("click")
+      @$(".new .ok").trigger("click")
     , @)
     escape(_.bind ->
-      @$(".new button.cancel").trigger("click")
+      @$(".new .cancel").trigger("click")
     , @)
     @$(".new.section")
       .show()
@@ -440,7 +491,7 @@ class Views.App extends Backbone.View
       id: id
       title: "New Entry"
       username: ""
-      password: uid(40)
+      password: @genPass.generate()
       url: "http://"
     @chest.entries.add(entry)
     @
@@ -471,10 +522,6 @@ class Views.App extends Backbone.View
     NProgress.done()
     @chest.set(metadata)
     @chest.set("status", "synced")
-    @
-
-  genPass: =>
-    @$(".genpass-output").text(uid(40))
     @
 
 

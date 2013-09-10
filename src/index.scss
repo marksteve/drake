@@ -17,43 +17,43 @@
   line-height: 1;
   -webkit-font-smoothing: antialiased;
 }
-.icon.auth:before {
+.icon-auth:before {
   content: "\e000";
 }
-.icon.open:before {
+.icon-open:before {
   content: "\e001";
 }
-.icon.pick:before {
+.icon-pick:before {
   content: "\e003";
 }
-.icon.ok:before {
+.icon-ok:before {
   content: "\e004";
 }
-.icon.cancel:before {
+.icon-cancel:before {
   content: "\e005";
 }
-.icon.new-entry:before {
+.icon-new-entry:before {
   content: "\e006";
 }
-.icon.trash:before {
+.icon-trash:before {
   content: "\e007";
 }
-.icon.sync:before {
+.icon-sync:before {
   content: "\e008";
 }
-.icon.genpass:before {
+.icon-genpass:before {
   content: "\e009";
 }
-.icon.new:before {
+.icon-new:before {
   content: "\e002";
 }
-.icon.switch:before {
+.icon-switch:before {
   content: "\f057";
 }
-.icon.settings:before {
+.icon-settings:before {
   content: "\e00a";
 }
-.icon.delete:before {
+.icon-delete:before {
   content: "\e00b";
 }
 
@@ -196,8 +196,30 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
         top: 1em;
         bottom: 1em;
       }
-      .genpass-output {
-        line-height: 1.5em;
+      .genpass {
+        position: relative;
+        button {
+          .icon-settings {
+            color: inherit;
+            margin-left: 10px;
+            padding-left: 10px;
+            border-left: 1px #bbb dotted;
+            display: inline-block;
+            text-decoration: none;
+          }
+        }
+        .settings {
+          display: none;
+          position: absolute;
+          left: 15px;
+          right: 15px;
+          background: white;
+          border: 1px #444 solid;
+          padding: 0 15px;
+        }
+        .output {
+          line-height: 1.5em;
+        }
       }
     }
     .entry {
