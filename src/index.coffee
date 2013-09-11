@@ -8,7 +8,7 @@ uid = require "uid"
 reactive = require "reactive"
 enter = require "on-enter"
 escape = require "on-escape"
-gen = (require "passwordgen")(Math.random)
+Passwordgen = require "passwordgen"
 
 
 # Config
@@ -57,7 +57,7 @@ class Collections.Entries extends Backbone.Collection
 class Models.GenPassSettings extends Backbone.Model
 
   defaults:
-    type: "Chars"
+    type: "chars"
     length: 30
     numbers: true
     letters: true
@@ -117,23 +117,18 @@ class Views.GenPass extends Backbone.View
     "click .icon-settings": "toggleSettings"
 
   initialize: =>
+    @gen = new Passwordgen()
     reactive(@el, @model)
     @
 
   generate: =>
     type = @model.get("type")
-    func = switch type
-      when "Chars" then "generate"
-      when "Words" then "words"
-    res = gen[type][func](
+    res = @gen[type](
       @model.get("length"),
       numbers: @model.get("numbers")
       letters: @model.get("letters")
       symbols: @model.get("symbols")
     )
-    switch type
-      when "Chars" then res
-      when "Words" then res.join(" ")
 
   output: =>
     @$(".output").text(@generate())

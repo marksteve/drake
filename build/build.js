@@ -9728,7 +9728,7 @@ require.register("components-underscore/underscore.js", function(exports, requir
   // Delegates to **ECMAScript 5**'s native `some` if available.
   // Aliased as `any`.
   var any = _.some = _.any = function(obj, iterator, context) {
-    iterator || (iterator = _.identity);
+    iterat| (iterator = _.identity);
     var result = false;
     if (obj == null) return result;
     if (nativeSome && obj.some === nativeSome) return obj.some(iterator, context);
@@ -9765,7 +9765,7 @@ require.register("components-underscore/underscore.js", function(exports, requir
   // Convenience version of a common use case of `filter`: selecting only objects
   // containing specific `key:value` pairs.
   _.where = function(obj, attrs, first) {
-    if (_.isEmpty(attrs)) return first ? null : [];
+    if (_.isEmpty(attrs)) return first ? void 0 : [];
     return _[first ? 'find' : 'filter'](obj, function(value) {
       for (var key in attrs) {
         if (attrs[key] !== value[key]) return false;
@@ -9782,7 +9782,7 @@ require.register("components-underscore/underscore.js", function(exports, requir
 
   // Return the maximum element or (element-based computation).
   // Can't optimize arrays of integers longer than 65,535 elements.
-  // See: https://bugs.webkit.org/show_bug.cgi?id=80797
+  // See [WebKit Bug 80797](https://bugs.webkit.org/show_bug.cgi?id=80797)
   _.max = function(obj, iterator, context) {
     if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
       return Math.max.apply(Math, obj);
@@ -9791,7 +9791,7 @@ require.register("components-underscore/underscore.js", function(exports, requir
     var result = {computed : -Infinity, value: -Infinity};
     each(obj, function(value, index, list) {
       var computed = iterator ? iterator.call(context, value, index, list) : value;
-      computed >= result.computed && (result = {value : value, computed : computed});
+      computed > result.computed && (result = {value : value, computed : computed});
     });
     return result.value;
   };
@@ -9851,7 +9851,7 @@ require.register("components-underscore/underscore.js", function(exports, requir
   // An internal function used for aggregate "group by" operations.
   var group = function(obj, value, context, behavior) {
     var result = {};
-    var iterator = lookupIterator(value || _.identity);
+    var iterator = lookupIterator(value == null ? _.identity : value);
     each(obj, function(value, index) {
       var key = iterator.call(context, value, index, obj);
       behavior(result, key, value);
@@ -9890,7 +9890,7 @@ require.register("components-underscore/underscore.js", function(exports, requir
     return low;
   };
 
-  // Safely convert anything iterable into a real, live array.
+  // Safely create a real, live array from anything iterable.
   _.toArray = function(obj) {
     if (!obj) return [];
     if (_.isArray(obj)) return slice.call(obj);
@@ -9949,8 +9949,11 @@ require.register("components-underscore/underscore.js", function(exports, requir
 
   // Internal implementation of a recursive `flatten` function.
   var flatten = function(input, shallow, output) {
+    if (shallow && _.every(input, _.isArray)) {
+      return concat.apply(output, input);
+    }
     each(input, function(value) {
-      if (_.isArray(value)) {
+      if (_.isArray(value) || _.isArguments(value)) {
         shallow ? push.apply(output, value) : flatten(value, shallow, output);
       } else {
         output.push(value);
@@ -9993,7 +9996,7 @@ require.register("components-underscore/underscore.js", function(exports, requir
   // Produce an array that contains the union: each distinct element from all of
   // the passed-in arrays.
   _.union = function() {
-    return _.uniq(concat.apply(ArrayProto, arguments));
+    return _.uniq(_.flatten(arguments, true));
   };
 
   // Produce an array that contains every item shared between all the
@@ -10017,11 +10020,10 @@ require.register("components-underscore/underscore.js", function(exports, requir
   // Zip together multiple lists into a single array -- elements that share
   // an index go together.
   _.zip = function() {
-    var args = slice.call(arguments);
-    var length = _.max(_.pluck(args, 'length'));
+    var length = _.max(_.pluck(arguments, "length").concat(0));
     var results = new Array(length);
     for (var i = 0; i < length; i++) {
-      results[i] = _.pluck(args, "" + i);
+      results[i] = _.pluck(arguments, '' + i);
     }
     return results;
   };
@@ -10101,14 +10103,25 @@ require.register("components-underscore/underscore.js", function(exports, requir
   // Function (ahem) Functions
   // ------------------
 
+  // Reusable constructor function for prototype setting.
+  var ctor = function(){};
+
   // Create a function bound to a given object (assigning `this`, and arguments,
   // optionally). Delegates to **ECMAScript 5**'s native `Function.bind` if
   // available.
   _.bind = function(func, context) {
-    if (func.bind === nativeBind && nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
-    var args = slice.call(arguments, 2);
-    return function() {
-      return func.apply(context, args.concat(slice.call(arguments)));
+    var args, bound;
+    if (nativeBind && func.bind === nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
+    if (!_.isFunction(func)) throw new TypeError;
+    args = slice.call(arguments, 2);
+    return bound = function() {
+      if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
+      ctor.prototype = func.prototype;
+      var self = new ctor;
+      ctor.prototype = null;
+      var result = func.apply(self, args.concat(slice.call(arguments)));
+      if (Object(result) === result) return result;
+      return self;
     };
   };
 
@@ -10125,7 +10138,7 @@ require.register("components-underscore/underscore.js", function(exports, requir
   // all callbacks defined on an object belong to it.
   _.bindAll = function(obj) {
     var funcs = slice.call(arguments, 1);
-    if (funcs.length === 0) funcs = _.functions(obj);
+    if (funcs.length === 0) throw new Error("bindAll must be passed function names");
     each(funcs, function(f) { obj[f] = _.bind(obj[f], obj); });
     return obj;
   };
@@ -10154,17 +10167,23 @@ require.register("components-underscore/underscore.js", function(exports, requir
   };
 
   // Returns a function, that, when invoked, will only be triggered at most once
-  // during a given window of time.
-  _.throttle = function(func, wait) {
-    var context, args, timeout, result;
+  // during a given window of time. Normally, the throttled function will run
+  // as much as it can, without ever going more than once per `wait` duration;
+  // but if you'd like to disable the execution on the leading edge, pass
+  // `{leading: false}`. To disable execution on the trailing edge, ditto.
+  _.throttle = function(func, wait, options) {
+    var context, args, result;
+    var timeout = null;
     var previous = 0;
+    options || (options = {});
     var later = function() {
-      previous = new Date;
+      previous = options.leading === false ? 0 : new Date;
       timeout = null;
       result = func.apply(context, args);
     };
     return function() {
       var now = new Date;
+      if (!previous && options.leading === false) previous = now;
       var remaining = wait - (now - previous);
       context = this;
       args = arguments;
@@ -10173,7 +10192,7 @@ require.register("components-underscore/underscore.js", function(exports, requir
         timeout = null;
         previous = now;
         result = func.apply(context, args);
-      } else if (!timeout) {
+      } else if (!timeout && options.trailing !== false) {
         timeout = setTimeout(later, remaining);
       }
       return result;
@@ -10185,7 +10204,8 @@ require.register("components-underscore/underscore.js", function(exports, requir
   // N milliseconds. If `immediate` is passed, trigger the function on the
   // leading edge, instead of the trailing.
   _.debounce = function(func, wait, immediate) {
-    var timeout, result;
+    var result;
+    var timeout = null;
     return function() {
       var context = this, args = arguments;
       var later = function() {
@@ -10239,7 +10259,6 @@ require.register("components-underscore/underscore.js", function(exports, requir
 
   // Returns a function that will only be executed after being called N times.
   _.after = function(times, func) {
-    if (times <= 0) return func();
     return function() {
       if (--times < 1) {
         return func.apply(this, arguments);
@@ -10255,7 +10274,7 @@ require.register("components-underscore/underscore.js", function(exports, requir
   _.keys = nativeKeys || function(obj) {
     if (obj !== Object(obj)) throw new TypeError('Invalid object');
     var keys = [];
-    for (var key in obj) if (_.has(obj, key)) keys[keys.length] = key;
+    for (var key in obj) if (_.has(obj, key)) keys.push(key);
     return keys;
   };
 
@@ -10327,7 +10346,7 @@ require.register("components-underscore/underscore.js", function(exports, requir
     each(slice.call(arguments, 1), function(source) {
       if (source) {
         for (var prop in source) {
-          if (obj[prop] == null) obj[prop] = source[prop];
+          if (obj[prop] === void 0) obj[prop] = source[prop];
         }
       }
     });
@@ -10351,7 +10370,7 @@ require.register("components-underscore/underscore.js", function(exports, requir
   // Internal recursive comparison function for `isEqual`.
   var eq = function(a, b, aStack, bStack) {
     // Identical objects are equal. `0 === -0`, but they aren't identical.
-    // See the Harmony `egal` proposal: http://wiki.ecmascript.org/doku.php?id=harmony:egal.
+    // See the [Harmony `egal` proposal](http://wiki.ecmascript.org/doku.php?id=harmony:egal).
     if (a === b) return a !== 0 || 1 / a == 1 / b;
     // A strict comparison is necessary because `null == undefined`.
     if (a == null || b == null) return a === b;
@@ -10393,6 +10412,13 @@ require.register("components-underscore/underscore.js", function(exports, requir
       // unique nested structures.
       if (aStack[length] == a) return bStack[length] == b;
     }
+    // Objects with different constructors are not equivalent, but `Object`s
+    // from different frames are.
+    var aCtor = a.constructor, bCtor = b.constructor;
+    if (aCtor !== bCtor && !(_.isFunction(aCtor) && (aCtor instanceof aCtor) &&
+                             _.isFunction(bCtor) && (bCtor instanceof bCtor))) {
+      return false;
+    }
     // Add the first object to the stack of traversed objects.
     aStack.push(a);
     bStack.push(b);
@@ -10409,13 +10435,6 @@ require.register("components-underscore/underscore.js", function(exports, requir
         }
       }
     } else {
-      // Objects with different constructors are not equivalent, but `Object`s
-      // from different frames are.
-      var aCtor = a.constructor, bCtor = b.constructor;
-      if (aCtor !== bCtor && !(_.isFunction(aCtor) && (aCtor instanceof aCtor) &&
-                               _.isFunction(bCtor) && (bCtor instanceof bCtor))) {
-        return false;
-      }
       // Deep compare objects.
       for (var key in a) {
         if (_.has(a, key)) {
@@ -10539,7 +10558,7 @@ require.register("components-underscore/underscore.js", function(exports, requir
 
   // Run a function **n** times.
   _.times = function(n, iterator, context) {
-    var accum = Array(n);
+    var accum = Array(Math.max(0, n));
     for (var i = 0; i < n; i++) accum[i] = iterator.call(context, i);
     return accum;
   };
@@ -10582,10 +10601,10 @@ require.register("components-underscore/underscore.js", function(exports, requir
     };
   });
 
-  // If the value of the named property is a function then invoke it;
-  // otherwise, return it.
+  // If the value of the named `property` is a function then invoke it with the
+  // `object` as context; otherwise, return it.
   _.result = function(object, property) {
-    if (object == null) return null;
+    if (object == null) return void 0;
     var value = object[property];
     return _.isFunction(value) ? value.call(object) : value;
   };
@@ -22561,7 +22580,7 @@ require.register("component-event/index.js", function(exports, require, module){
 
 exports.bind = function(el, type, fn, capture){
   if (el.addEventListener) {
-    el.addEventListener(type, fn, capture || false);
+    el.addEventListener(type, fn, capture);
   } else {
     el.attachEvent('on' + type, fn);
   }
@@ -22581,7 +22600,7 @@ exports.bind = function(el, type, fn, capture){
 
 exports.unbind = function(el, type, fn, capture){
   if (el.removeEventListener) {
-    el.removeEventListener(type, fn, capture || false);
+    el.removeEventListener(type, fn, capture);
   } else {
     el.detachEvent('on' + type, fn);
   }
@@ -23924,65 +23943,148 @@ bind(document, 'keydown', function (e) {
 });
 });
 require.register("rstacruz-passwordgen.js/lib/index.js", function(exports, require, module){
-var words = require('./words');
+function Passwordgen(options) {
+  if (!options) options = {};
 
-module.exports = function(random) {
+  this.random = options.random || Math.random;
+}
 
-  function sample(array) {
-    return array[Math.floor(random() * (array.length-1), 10)];
-  }
+/**
+ * Password generator.
+ *
+ *     var gen = new Passwordgen();
+ *
+ *     gen.secure();       // Use a better RNG (only for Node.js)
+ *
+ *     gen.word();         //=> "kitten"
+ *     gen.phrase();       //=> "television pen card small"
+ *     gen.words();        //=> ['hello', 'honey', 'mittens', 'score']
+ *     gen.chars();        //=> "uAC4bGA0tXG"
+ *
+ * Available options:
+ *
+ *     gen.phrase(3);
+ *     gen.phrase({ symbols: true });
+ *     gen.phrase({ separator: '_' });
+ *
+ *     gen.words(3);
+ *     gen.words({ symbols: true });
+ *
+ *     gen.chars(10);
+ *     gen.chars(10, { letters: false });
+ *     gen.chars(10, { numbers: false });
+ *     gen.chars(10, { symbols: true });
+ */
 
-  function rand(n) {
-    return Math.floor(random() * n);
-  }
+Passwordgen.prototype = {
+  letters: ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','W','Y','Z'],
+  numbers: ['0','1','2','3','4','5','6','7','8','9'],
+  symbols: ['!','@','#','$','%','^','&','*','`','~','/','=','?','+','|','_','-',':',';','.',','],
+  wordlist: require('./words'),
 
-  var Chars = {
-    letters: ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','W','Y','Z'],
-    numbers: ['0','1','2','3','4','5','6','7','8','9'],
-    symbols: ['!','@','#','$','%','^','&','*','`','~','/','=','?','+','|','_','-',':',';','.',','],
+  /**
+   * Turns on secure random for Node.js.
+   */
 
-    generate: function(length, options) {
-      var pool = [];
-      if (options.letters !== false) pool = pool.concat(this.letters);
-      if (options.numbers !== false) pool = pool.concat(this.numbers);
+  secure: function() {
+    this.random = require('./secure_random');
+    return this;
+  },
 
-      var str = "";
-      for (var i=0; i<length; ++i) { str += sample(pool); }
+  /**
+   * Returns a random member of an `array`.
+   */
 
-      if (options.symbols) {
-        var symbols = Math.floor(random() * (length * 0.4)) + 1;
+  sample: function(array) {
+    return array[this.rand(this.random() * (array.length-1))];
+  },
 
-        for (i=0; i<symbols; ++i) {
-          var pos = Math.floor(rand(length-1)) + 1;
-          str = str.substr(0, pos) + sample(this.symbols) + str.substr(pos);
-        }
+  /**
+   * Returns a random integer less than `max`.
+   */
+
+  rand: function(max) {
+    return Math.floor(this.random() * max);
+  },
+
+  /**
+   * Returns a string of characters.
+   *
+   *     gen.chars();       // "uAC4bGA0tXG"
+   *     gen.chars(10);
+   *     gen.chars(10, { letters: false });
+   *     gen.chars(10, { numbers: false });
+   *     gen.chars(10, { symbols: true });
+   */
+
+  chars: function(length, options) {
+    if (!length) length = 10;
+
+    var pool = [];
+    if (!options || options.letters !== false) pool = pool.concat(this.letters);
+    if (!options || options.numbers !== false) pool = pool.concat(this.numbers);
+
+    var str = "";
+    for (var i=0; i<length; ++i) { str += this.sample(pool); }
+
+    if (options && options.symbols) {
+      var symbols = this.rand(length * 0.4) + 1;
+
+      for (i=0; i<symbols; ++i) {
+        var pos = this.rand(length-1) + 1;
+        str = str.substr(0, pos) + this.sample(this.symbols) + str.substr(pos+1);
       }
-      return str;
     }
-  };
+    return str;
+  },
 
-  var Words = {
-    word: function() {
-      var len = words.length;
-      return words[parseInt(random() * len, 10)];
-    },
-    words: function(length, options) {
-      var list = [];
-      for (var i=0; i<length; ++i) { list.push(this.word()); }
+  /**
+   * Generates a random word.
+   *
+   *     gen.word();         // "kitten"
+   */
 
-      if (options.symbols) {
-        list.push(Chars.generate(rand(3)+2, { letters: false, symbols: true }));
-      }
-      return list;
+  word: function() {
+    return this.sample(this.wordlist);
+  },
+
+  /**
+   * Generates words.
+   *
+   *     gen.words();       // ['hello', 'honey', 'mittens', 'score']
+   *     gen.words(3);
+   *     gen.words({ symbols: true });
+   */
+
+  words: function(length, options) {
+    if (!length) length = 4;
+
+    var list = [];
+    for (var i=0; i<length; ++i) { list.push(this.word()); }
+
+    if (options && options.symbols) {
+      list.push(this.chars(this.rand(3)+2, { letters: false, symbols: true }));
     }
-  };
 
-  return {
-    Chars: Chars,
-    Words: Words
-  };
+    return list;
+  },
 
+  /**
+   * Generates a phrase.
+   *
+   *     gen.phrase();       // "television pen card small"
+   *     gen.phrase(3);
+   *     gen.phrase({ symbols: true });
+   *     gen.phrase({ separator: '_' });
+   */
+
+  phrase: function(length, options) {
+    var sep = (options && options.separator) || ' ';
+    return this.words(length, options).join(sep);
+  }
 };
+
+module.exports = Passwordgen;
 
 });
 require.register("rstacruz-passwordgen.js/lib/words.js", function(exports, require, module){
@@ -43909,7 +44011,7 @@ module.exports = [
 require.register("drake/index.js", function(exports, require, module){
 // Generated by CoffeeScript 1.6.3
 (function() {
-  var Backbone, Collections, Config, JSON, Models, NProgress, Templates, Views, el, enter, escape, gen, reactive, sjcl, uid, _, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7,
+  var Backbone, Collections, Config, JSON, Models, NProgress, Passwordgen, Templates, Views, el, enter, escape, reactive, sjcl, uid, _, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -43934,7 +44036,7 @@ require.register("drake/index.js", function(exports, require, module){
 
   escape = require("on-escape");
 
-  gen = (require("passwordgen"))(Math.random);
+  Passwordgen = require("passwordgen");
 
   Config = {
     clientId: "671657367079.apps.googleusercontent.com"
@@ -44030,7 +44132,7 @@ require.register("drake/index.js", function(exports, require, module){
     }
 
     GenPassSettings.prototype.defaults = {
-      type: "Chars",
+      type: "chars",
       length: 30,
       numbers: true,
       letters: true,
@@ -44143,32 +44245,19 @@ require.register("drake/index.js", function(exports, require, module){
     };
 
     GenPass.prototype.initialize = function() {
+      this.gen = new Passwordgen();
       reactive(this.el, this.model);
       return this;
     };
 
     GenPass.prototype.generate = function() {
-      var func, res, type;
+      var res, type;
       type = this.model.get("type");
-      func = (function() {
-        switch (type) {
-          case "Chars":
-            return "generate";
-          case "Words":
-            return "words";
-        }
-      })();
-      res = gen[type][func](this.model.get("length"), {
+      return res = this.gen[type](this.model.get("length"), {
         numbers: this.model.get("numbers"),
         letters: this.model.get("letters"),
         symbols: this.model.get("symbols")
       });
-      switch (type) {
-        case "Chars":
-          return res;
-        case "Words":
-          return res.join(" ");
-      }
     };
 
     GenPass.prototype.output = function() {
