@@ -104,7 +104,7 @@ class Views.Entry extends Backbone.View
   delete: (e) =>
     e.preventDefault()
     if confirm("Are you sure you want to permanently delete this entry?")
-      @model.trigger("remove")
+      @model.collection.remove(@model)
       @remove()
     @
 
@@ -175,11 +175,11 @@ class Views.App extends Backbone.View
     @chest.on("change:status", @toggleSync)
     @chest.entries = new Collections.Entries()
     @chest.entries
-      .on("add", @listenEntry)
       .on("add", @renderEntry)
       .on("remove", @removeEntry)
-      .on("reset", @listenEntries)
+      .on("remove", @setNeedSync)
       .on("reset", @renderEntries)
+      .on("change", @setNeedSync)
     @genPass = new Views.GenPass(model: new Models.GenPassSettings())
     @setupPlugins()
     @
@@ -426,19 +426,6 @@ class Views.App extends Backbone.View
       @error("Failed to open chest")
     @
 
-  listenEntry: (entry) =>
-    chest = @chest
-    entry.on "change", ->
-      chest.set("status", "needSync")
-    entry.on "remove", ->
-      chest.set("status", "needSync")
-      chest.entries.remove(entry)
-    @
-
-  listenEntries: (entries) =>
-    entries.each(@listenEntry)
-    @
-
   renderEntry: (entry) =>
     if @filterProp != "trashed" and entry.get("trashed")
       return
@@ -502,6 +489,10 @@ class Views.App extends Backbone.View
             when "syncing" then "Syncing"
             when "synced" then "Synced"
         )
+    @
+
+  setNeedSync: =>
+    @chest.set("status", "needSync")
     @
 
   sync: =>

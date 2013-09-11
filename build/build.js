@@ -44215,7 +44215,7 @@ require.register("drake/index.js", function(exports, require, module){
     Entry.prototype["delete"] = function(e) {
       e.preventDefault();
       if (confirm("Are you sure you want to permanently delete this entry?")) {
-        this.model.trigger("remove");
+        this.model.collection.remove(this.model);
         this.remove();
       }
       return this;
@@ -44282,13 +44282,12 @@ require.register("drake/index.js", function(exports, require, module){
     function App() {
       this.updateChestMetadata = __bind(this.updateChestMetadata, this);
       this.sync = __bind(this.sync, this);
+      this.setNeedSync = __bind(this.setNeedSync, this);
       this.toggleSync = __bind(this.toggleSync, this);
       this.newEntry = __bind(this.newEntry, this);
       this.filterEntries = __bind(this.filterEntries, this);
       this.renderEntries = __bind(this.renderEntries, this);
       this.renderEntry = __bind(this.renderEntry, this);
-      this.listenEntries = __bind(this.listenEntries, this);
-      this.listenEntry = __bind(this.listenEntry, this);
       this.open = __bind(this.open, this);
       this.setChestContent = __bind(this.setChestContent, this);
       this.downloadChest = __bind(this.downloadChest, this);
@@ -44363,7 +44362,7 @@ require.register("drake/index.js", function(exports, require, module){
       });
       this.chest.on("change:status", this.toggleSync);
       this.chest.entries = new Collections.Entries();
-      this.chest.entries.on("add", this.listenEntry).on("add", this.renderEntry).on("remove", this.removeEntry).on("reset", this.listenEntries).on("reset", this.renderEntries);
+      this.chest.entries.on("add", this.renderEntry).on("remove", this.removeEntry).on("remove", this.setNeedSync).on("reset", this.renderEntries).on("change", this.setNeedSync);
       this.genPass = new Views.GenPass({
         model: new Models.GenPassSettings()
       });
@@ -44641,24 +44640,6 @@ require.register("drake/index.js", function(exports, require, module){
       return this;
     };
 
-    App.prototype.listenEntry = function(entry) {
-      var chest;
-      chest = this.chest;
-      entry.on("change", function() {
-        return chest.set("status", "needSync");
-      });
-      entry.on("remove", function() {
-        chest.set("status", "needSync");
-        return chest.entries.remove(entry);
-      });
-      return this;
-    };
-
-    App.prototype.listenEntries = function(entries) {
-      entries.each(this.listenEntry);
-      return this;
-    };
-
     App.prototype.renderEntry = function(entry) {
       var filter;
       if (this.filterProp !== "trashed" && entry.get("trashed")) {
@@ -44739,6 +44720,11 @@ require.register("drake/index.js", function(exports, require, module){
             return "Synced";
         }
       })());
+      return this;
+    };
+
+    App.prototype.setNeedSync = function() {
+      this.chest.set("status", "needSync");
       return this;
     };
 
