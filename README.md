@@ -18,6 +18,13 @@ fork it.
 
 ## Develop
 
+### Build requirements
+
+```shell
+$ npm install -g component coffee-script css-condense uglify-js
+$ gem install sass
+```
+
 ### Continually build if changes are detected
 
 ```shell
