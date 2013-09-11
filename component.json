@@ -16,9 +16,10 @@
     "rstacruz/passwordgen.js": "*"
   },
   "scripts": [
-    "index.js"
+    "lib/index.js"
   ],
   "styles": [
-    "index.css"
-  ]
+    "lib/index.css"
+  ],
+  "main": "lib/index.js"
 }

@@ -1078,7 +1078,7 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
   margin-bottom: 5em;
   position: relative; }
   .app h1 {
-    background: url(../../images/drake.png) no-repeat left top;
+    background: url(../../../images/drake.png) no-repeat left top;
     padding-left: 40px;
     margin-top: 0; }
     .app h1 a {

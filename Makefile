@@ -1,14 +1,14 @@
-build: index.css index.js components
+build: lib/index.css lib/index.js components
 	component build -v
 	@touch build
 
 components: component.json
 	component install
 
-%.css: src/%.scss
+lib/%.css: src/%.scss
 	sass -C $< $@
 
-%.js: src/%.coffee
+lib/%.js: src/%.coffee
 	coffee -cp $< > $@
 
 serve: build

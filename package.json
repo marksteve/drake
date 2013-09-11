@@ -1,0 +1,21 @@
+{
+  "name": "drake",
+  "version": "0.0.1",
+  "description": "Password management with Google Drive",
+  "main": "index.js",
+  "scripts": {
+    "start": "make serve",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "marksteve/drake"
+  },
+  "keywords": [
+    "password",
+    "management",
+    "google-drive"
+  ],
+  "author": "Mark Steve Samson <hello@marksteve.com>",
+  "license": "MIT"
+}
