@@ -1,3 +1,14 @@
+CSS = build/build.min.css
+JS = build/build.min.js
+
+all: $(CSS) $(JS)
+
+$(CSS): build
+	cssc build/build.css > $@
+
+$(JS): build
+	uglifyjs build/build.js > $@
+
 build: lib/index.css lib/index.js components
 	component build -v
 	@touch build
@@ -12,7 +23,6 @@ lib/%.js: src/%.coffee
 	coffee -cp $< > $@
 
 serve: build
-	@command -v serve > /dev/null 2>&1 || { echo "serve not found: npm install -g serve"; exit 1; }
 	serve
 
 .PHONY: serve
