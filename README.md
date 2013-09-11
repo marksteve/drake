@@ -1,6 +1,6 @@
-![Drake](http://marksteve.com/drake/images/drake-256.png)
-
 # Drake
+
+![Drake](http://marksteve.com/drake/images/drake-256.png)
 
 Keep your passwords in "chests" that are stored and synced to your Google Drive account.
 
