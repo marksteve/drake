@@ -23824,123 +23824,326 @@ exports.get = function(obj, prop) {
 };
 
 });
-require.register("segmentio-on-enter/index.js", function(exports, require, module){
-
-var bind = require('event').bind
-  , indexOf = require('indexof');
-
+require.register("yields-keycode/index.js", function(exports, require, module){
 
 /**
- * Expose `onEnter`.
+ * map
  */
 
-module.exports = exports = onEnter;
-
-
-/**
- * Handlers.
- */
-
-var fns = [];
-
-
-/**
- * Escape binder.
- *
- * @param {Function} fn
- */
-
-function onEnter (fn) {
-  fns.push(fn);
-}
-
-
-/**
- * Bind a handler, for symmetry.
- */
-
-exports.bind = onEnter;
-
-
-/**
- * Unbind a handler.
- *
- * @param {Function} fn
- */
-
-exports.unbind = function (fn) {
-  var index = indexOf(fns, fn);
-  if (index) fns.splice(index, 1);
+var map = {
+    backspace: 8
+  , tab: 9
+  , clear: 12
+  , enter: 13
+  , shift: 16
+  , ctrl: 17
+  , alt: 18
+  , capslock: 20
+  , escape: 27
+  , esc: 27
+  , space: 32
+  , left: 37
+  , up: 38
+  , right: 39
+  , down: 40
+  , del: 46
+  , comma: 188
+  , ',': 188
+  , '.': 190
+  , '/': 191
+  , '`': 192
+  , '-': 189
+  , '=': 187
+  , ';': 186
+  , '[': 219
+  , '\\': 220
+  , ']': 221
+  , '\'': 222
 };
 
-
 /**
- * Bind to `document` once.
- */
-
-bind(document, 'keydown', function (e) {
-  if (13 !== e.keyCode) return;
-  for (var i = 0, fn; fn = fns[i]; i++) fn(e);
-});
-});
-require.register("segmentio-on-escape/index.js", function(exports, require, module){
-
-var bind = require('event').bind
-  , indexOf = require('indexof');
-
-
-/**
- * Expose `onEscape`.
- */
-
-module.exports = exports = onEscape;
-
-
-/**
- * Handlers.
- */
-
-var fns = [];
-
-
-/**
- * Escape binder.
+ * find a keycode.
  *
- * @param {Function} fn
+ * @param {String} name
+ * @return {Number}
  */
 
-function onEscape (fn) {
-  fns.push(fn);
-}
-
-
-/**
- * Bind a handler, for symmetry.
- */
-
-exports.bind = onEscape;
-
-
-/**
- * Unbind a handler.
- *
- * @param {Function} fn
- */
-
-exports.unbind = function (fn) {
-  var index = indexOf(fns, fn);
-  if (index) fns.splice(index, 1);
+module.exports = function(name){
+  return map[name] || name.toUpperCase().charCodeAt(0);
 };
 
+});
+require.register("component-bind/index.js", function(exports, require, module){
 
 /**
- * Bind to `document` once.
+ * Slice reference.
  */
 
-bind(document, 'keydown', function (e) {
-  if (27 !== e.keyCode) return;
-  for (var i = 0, fn; fn = fns[i]; i++) fn(e);
+var slice = [].slice;
+
+/**
+ * Bind `obj` to `fn`.
+ *
+ * @param {Object} obj
+ * @param {Function|String} fn or string
+ * @return {Function}
+ * @api public
+ */
+
+module.exports = function(obj, fn){
+  if ('string' == typeof fn) fn = obj[fn];
+  if ('function' != typeof fn) throw new Error('bind() requires a function');
+  var args = [].slice.call(arguments, 2);
+  return function(){
+    return fn.apply(obj, args.concat(slice.call(arguments)));
+  }
+};
+
 });
+require.register("component-os/index.js", function(exports, require, module){
+
+
+module.exports = os();
+
+function os() {
+  var ua = navigator.userAgent;
+  if (/mac/i.test(ua)) return 'mac';
+  if (/win/i.test(ua)) return 'windows';
+  if (/linux/i.test(ua)) return 'linux';
+}
+
+});
+require.register("yields-k/index.js", function(exports, require, module){
+
+/**
+ * dependencies.
+ */
+
+var event = require('event')
+  , proto = require('./proto')
+  , bind = require('bind');
+
+/**
+ * create a new dispatcher with `el`.
+ *
+ * example:
+ *
+ *      var k = require('k')(window);
+ *      k('shift + tab', function(){});
+ *
+ * @param {Element} el
+ * @return {Function}
+ */
+
+module.exports = function(el){
+  function k(e, fn){ k.handle(e, fn) };
+  k._handle = bind(k, proto.handle);
+  k._clear = bind(k, proto.clear);
+  event.bind(el, 'keydown', k._handle, false);
+  event.bind(el, 'keyup', k._clear, false);
+  event.bind(el, 'focus', k._clear, false);
+  k.listeners = {};
+  for (var p in proto) k[p] = proto[p];
+  k.el = el;
+  return k;
+};
+
+});
+require.register("yields-k/proto.js", function(exports, require, module){
+
+/**
+ * dependencies
+ */
+
+var keycode = require('keycode')
+  , event = require('event')
+  , os = require('os');
+
+/**
+ * modifiers.
+ */
+
+var modifiers = {
+  91: 'command',
+  93: 'command',
+  16: 'shift',
+  17: 'ctrl',
+  18: 'alt'
+};
+
+/**
+ * Super key.
+ */
+
+exports.super = 'mac' == os
+  ? 'command'
+  : 'ctrl';
+
+/**
+ * handle the given `KeyboardEvent` or bind
+ * a new `keys` handler.
+ *
+ * @param {String|KeyboardEvent} e
+ * @param {Function} fn
+ */
+
+exports.handle = function(e, fn){
+  var all = this.listeners[e.which]
+    , len = all && all.length
+    , ignore = this.ignore
+    , invoke = true
+    , handle
+    , mods
+    , mlen;
+
+  // bind
+  if (fn) return this.bind(e, fn);
+
+  // modifiers
+  if (modifiers[e.which]) {
+    this.super = exports.super == modifiers[e.which];
+    this[modifiers[e.which]] = true;
+    this.modifiers = true;
+    return;
+  }
+
+  // ignore
+  if (ignore && ignore(e)) return;
+
+  // match
+  for (var i = 0; i < len; ++i) {
+    invoke = true;
+    handle = all[i];
+    mods = handle.mods;
+    mlen = mods.length;
+
+    for (var j = 0; j < mlen; ++j) {
+      if (!this[mods[j]]) {
+        invoke = null;
+        break;
+      }
+    }
+
+    invoke && handle.fn(e);
+  }
+};
+
+/**
+ * destroy this `k` dispatcher instance.
+ */
+
+exports.destroy = function(){
+  event.unbind(this.el, 'keydown', this._handle);
+  event.unbind(this.el, 'keyup', this._clear);
+  event.unbind(this.el, 'focus', this._clear);
+  this.listeners = {};
+};
+
+/**
+ * unbind the given `keys` with optional `fn`.
+ *
+ * example:
+ *
+ *      k.unbind('enter, tab', myListener); // unbind `myListener` from `enter, tab` keys
+ *      k.unbind('enter, tab'); // unbind all `enter, tab` listeners
+ *      k.unbind(); // unbind all listeners
+ *
+ * @param {String} keys
+ * @param {Function} fn
+ * @return {self}
+ */
+
+exports.unbind = function(keys, fn){
+  var listeners = this.listeners
+    , index
+    , key
+    , len;
+
+  if (!keys) {
+    this.listeners = {};
+    return this;
+  }
+
+  keys = keys.split(/ *, */);
+  for (var i = 0, len = keys.length; i < len; ++i) {
+    key = keycode(keys[i]);
+    if (null == fn) {
+      listeners[key] = [];
+    } else {
+      index = listeners[key].indexOf(fn);
+      listeners[key].splice(i, 1);
+    }
+  }
+
+  return this;
+};
+
+/**
+ * bind the given `keys` to `fn`.
+ *
+ * example:
+ *
+ *      k.bind('shift + tab, ctrl + a', function(e){});
+ *
+ * @param {String} keys
+ * @param {Function} fn
+ * @return {self}
+ */
+
+exports.bind = function(keys, fn){
+  var fns = this.listeners
+    , mods = []
+    , key;
+
+  // superkey
+  keys = keys.replace('super', exports.super);
+
+  // support `,`
+  var all = ',' != keys
+    ? keys.split(/ *, */)
+    : [','];
+
+  // bind
+  for (var i = 0, len = all.length; i < len; ++i) {
+    if ('' == all[i]) continue;
+    mods = all[i].split(/ *\+ */);
+    key = keycode(mods.pop() || ',');
+    if (!fns[key]) fns[key] = [];
+    fns[key].push({ mods: mods, fn: fn });
+  }
+
+  return this;
+};
+
+/**
+ * clear all modifiers on `keyup`.
+ */
+
+exports.clear = function(e){
+  var code = e.keyCode;
+  if (!(code in modifiers)) return;
+  this[modifiers[code]] = null;
+  this.modifiers = this.command
+    || this.shift
+    || this.ctrl
+    || this.alt;
+};
+
+/**
+ * Ignore all input elements by default.
+ *
+ * @param {Event} e
+ * @return {Boolean}
+ */
+
+exports.ignore = function(e){
+  var el = e.target || e.srcElement;
+  var name = el.tagName.toLowerCase();
+  return 'textarea' == name
+    || 'select' == name
+    || 'input' == name;
+};
+
 });
 require.register("rstacruz-passwordgen.js/lib/index.js", function(exports, require, module){
 function Passwordgen(options) {
@@ -44011,7 +44214,7 @@ module.exports = [
 require.register("drake/lib/index.js", function(exports, require, module){
 // Generated by CoffeeScript 1.6.3
 (function() {
-  var Backbone, Collections, Config, JSON, Models, NProgress, Passwordgen, Templates, Views, el, enter, escape, reactive, sjcl, uid, _, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7,
+  var Backbone, Collections, Config, JSON, Models, NProgress, Passwordgen, Templates, Views, el, k, reactive, sjcl, uid, _, _i, _len, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -44032,9 +44235,7 @@ require.register("drake/lib/index.js", function(exports, require, module){
 
   reactive = require("reactive");
 
-  enter = require("on-enter");
-
-  escape = require("on-escape");
+  k = require("k");
 
   Passwordgen = require("passwordgen");
 
@@ -44168,8 +44369,7 @@ require.register("drake/lib/index.js", function(exports, require, module){
     Chest.prototype.update = function() {
       var data;
       data = JSON.stringify(this.entries.toJSON());
-      this.set("ciphertext", sjcl.encrypt(this.get("password"), data));
-      return this;
+      return this.set("ciphertext", sjcl.encrypt(this.get("password"), data));
     };
 
     return Chest;
@@ -44196,29 +44396,25 @@ require.register("drake/lib/index.js", function(exports, require, module){
     };
 
     Entry.prototype.showPassword = function() {
-      this.$(".password").attr("type", "text");
-      return this;
+      return this.$(".password").attr("type", "text");
     };
 
     Entry.prototype.hidePasword = function() {
-      this.$(".password").attr("type", "password");
-      return this;
+      return this.$(".password").attr("type", "password");
     };
 
     Entry.prototype.trash = function(e) {
       e.preventDefault();
       this.model.set("trashed", true);
-      this.remove();
-      return this;
+      return this.remove();
     };
 
     Entry.prototype["delete"] = function(e) {
       e.preventDefault();
       if (confirm("Are you sure you want to permanently delete this entry?")) {
         this.model.collection.remove(this.model);
-        this.remove();
+        return this.remove();
       }
-      return this;
     };
 
     return Entry;
@@ -44246,8 +44442,7 @@ require.register("drake/lib/index.js", function(exports, require, module){
 
     GenPass.prototype.initialize = function() {
       this.gen = new Passwordgen();
-      reactive(this.el, this.model);
-      return this;
+      return reactive(this.el, this.model);
     };
 
     GenPass.prototype.generate = function() {
@@ -44261,20 +44456,328 @@ require.register("drake/lib/index.js", function(exports, require, module){
     };
 
     GenPass.prototype.output = function() {
-      this.$(".output").text(this.generate());
-      return this;
+      return this.$(".output").text(this.generate());
     };
 
     GenPass.prototype.toggleSettings = function(e) {
       e.preventDefault();
       e.stopPropagation();
-      this.$(".settings").toggle();
-      return this;
+      return this.$(".settings").toggle();
     };
 
     return GenPass;
 
   })(Backbone.View);
+
+  Views.Section = (function(_super) {
+    __extends(Section, _super);
+
+    function Section() {
+      this.hide = __bind(this.hide, this);
+      this.show = __bind(this.show, this);
+      _ref7 = Section.__super__.constructor.apply(this, arguments);
+      return _ref7;
+    }
+
+    Section.prototype.show = function() {
+      this.$el.show();
+      return this;
+    };
+
+    Section.prototype.hide = function() {
+      this.$el.hide();
+      return this;
+    };
+
+    return Section;
+
+  })(Backbone.View);
+
+  Views.Auth = (function(_super) {
+    __extends(Auth, _super);
+
+    function Auth() {
+      this.auth = __bind(this.auth, this);
+      this.events = __bind(this.events, this);
+      _ref8 = Auth.__super__.constructor.apply(this, arguments);
+      return _ref8;
+    }
+
+    Auth.prototype.el = ".auth.section";
+
+    Auth.prototype.events = function() {
+      return {
+        "click button": "auth"
+      };
+    };
+
+    Auth.prototype.auth = function() {
+      return this.trigger("auth");
+    };
+
+    return Auth;
+
+  })(Views.Section);
+
+  Views.Load = (function(_super) {
+    __extends(Load, _super);
+
+    function Load() {
+      this.pickerCb = __bind(this.pickerCb, this);
+      this.showPick = __bind(this.showPick, this);
+      this.buildPicker = __bind(this.buildPicker, this);
+      this.newChest = __bind(this.newChest, this);
+      this.showNew = __bind(this.showNew, this);
+      this.initialize = __bind(this.initialize, this);
+      _ref9 = Load.__super__.constructor.apply(this, arguments);
+      return _ref9;
+    }
+
+    Load.prototype.el = ".load.section";
+
+    Load.prototype.events = {
+      "click .new": "showNew",
+      "click .pick": "showPick"
+    };
+
+    Load.prototype.initialize = function() {
+      this._new = new Views.New();
+      this.listenTo(this._new, "ok", this.newChest);
+      return this.listenTo(this._new, "cancel", this.show);
+    };
+
+    Load.prototype.showNew = function() {
+      this.hide();
+      return this._new.show();
+    };
+
+    Load.prototype.newChest = function(name, password) {
+      return this.trigger("new", name, password);
+    };
+
+    Load.prototype.buildPicker = function() {
+      return this.picker = new google.picker.PickerBuilder().addView(google.picker.ViewId.DOCS).setCallback(this.pickerCb).build();
+    };
+
+    Load.prototype.showPick = function() {
+      return this.picker.setVisible(true);
+    };
+
+    Load.prototype.pickerCb = function(data) {
+      var fileId;
+      switch (data[google.picker.Response.ACTION]) {
+        case google.picker.Action.PICKED:
+          fileId = data[google.picker.Response.DOCUMENTS][0].id;
+          return this.trigger("pick", fileId);
+      }
+    };
+
+    return Load;
+
+  })(Views.Section);
+
+  Views.New = (function(_super) {
+    __extends(New, _super);
+
+    function New() {
+      this.cancel = __bind(this.cancel, this);
+      this.ok = __bind(this.ok, this);
+      this.show = __bind(this.show, this);
+      this.initialize = __bind(this.initialize, this);
+      _ref10 = New.__super__.constructor.apply(this, arguments);
+      return _ref10;
+    }
+
+    New.prototype.el = ".new.section";
+
+    New.prototype.events = {
+      "click .ok": "ok",
+      "click .cancel": "cancel"
+    };
+
+    New.prototype.initialize = function() {
+      var $cancel, $ok, _k;
+      $ok = this.$(".ok");
+      $cancel = this.$(".cancel");
+      _k = k(this.el);
+      _k.ignore = function() {
+        return false;
+      };
+      _k("enter", function() {
+        return $ok.trigger("click");
+      });
+      return _k("escape", function() {
+        return $cancel.trigger("click");
+      });
+    };
+
+    New.prototype.show = function() {
+      New.__super__.show.call(this);
+      this.$(".name").focus();
+      return this;
+    };
+
+    New.prototype.ok = function() {
+      var name, password;
+      name = this.$(".name").val().trim();
+      password = this.$(".password").val().trim();
+      if (!(name && password)) {
+        return;
+      }
+      this.hide();
+      return this.trigger("ok", name, password);
+    };
+
+    New.prototype.cancel = function() {
+      this.hide();
+      return this.trigger("cancel");
+    };
+
+    return New;
+
+  })(Views.Section);
+
+  Views.Open = (function(_super) {
+    __extends(Open, _super);
+
+    function Open() {
+      this.open = __bind(this.open, this);
+      this.show = __bind(this.show, this);
+      this.initialize = __bind(this.initialize, this);
+      _ref11 = Open.__super__.constructor.apply(this, arguments);
+      return _ref11;
+    }
+
+    Open.prototype.el = ".open.section";
+
+    Open.prototype.events = {
+      "click button": "open"
+    };
+
+    Open.prototype.initialize = function() {
+      var $button, _k;
+      $button = this.$("button");
+      _k = k(this.el);
+      _k.ignore = function() {
+        return false;
+      };
+      return _k("enter", function() {
+        return $button.trigger("click");
+      });
+    };
+
+    Open.prototype.show = function() {
+      Open.__super__.show.call(this);
+      this.$(".password").focus();
+      return this;
+    };
+
+    Open.prototype.open = function() {
+      var password;
+      password = this.$(".password").val();
+      return this.trigger("open", password);
+    };
+
+    return Open;
+
+  })(Views.Section);
+
+  Views.Entries = (function(_super) {
+    __extends(Entries, _super);
+
+    function Entries() {
+      this.newEntry = __bind(this.newEntry, this);
+      this.filterEntries = __bind(this.filterEntries, this);
+      this.renderEntries = __bind(this.renderEntries, this);
+      this.renderEntry = __bind(this.renderEntry, this);
+      this.initialize = __bind(this.initialize, this);
+      _ref12 = Entries.__super__.constructor.apply(this, arguments);
+      return _ref12;
+    }
+
+    Entries.prototype.el = ".entries";
+
+    Entries.prototype.events = {
+      "keyup .filter input": "filterEntries",
+      "blur .filter input": "filterEntries",
+      "change .filter input": "filterEntries",
+      "click .new-entry": "newEntry"
+    };
+
+    Entries.prototype.initialize = function() {
+      this.genPass = new Views.GenPass({
+        model: new Models.GenPassSettings()
+      });
+      this.listenTo(this.collection, "add", this.renderEntry);
+      this.listenTo(this.collection, "remove", this.removeEntry);
+      return this.listenTo(this.collection, "reset", this.renderEntries);
+    };
+
+    Entries.prototype.renderEntry = function(entry) {
+      var filter;
+      if (this.filterProp !== "trashed" && entry.get("trashed")) {
+        return;
+      }
+      if (this.filterProp && entry.has(this.filterProp)) {
+        if (this.filterProp === "trashed") {
+          if (!entry.get("trashed")) {
+            return;
+          }
+        } else {
+          filter = new RegExp(this.filter.source.substring(this.filterProp.length + 1), "i");
+          if (!filter.test(entry.get(this.filterProp))) {
+            return;
+          }
+        }
+      } else {
+        if (this.filter && !this.filter.test(entry.get("title"))) {
+          return;
+        }
+      }
+      return this.$("> ul").append(new Views.Entry({
+        model: entry,
+        el: reactive(Templates.entry.cloneNode(true), entry).el
+      }).$el);
+    };
+
+    Entries.prototype.renderEntries = function(entries) {
+      this.$("> ul").empty();
+      return entries.each(this.renderEntry);
+    };
+
+    Entries.prototype.filterEntries = function() {
+      var filterVal;
+      filterVal = this.$(".filter input").val().trim();
+      if (filterVal.lastIndexOf(":") > 0) {
+        this.filterProp = filterVal.split(":")[0];
+      } else {
+        this.filterProp = null;
+      }
+      this.filter = new RegExp(filterVal, "i");
+      return this.renderEntries(this.collection);
+    };
+
+    Entries.prototype.newEntry = function() {
+      var entry, id;
+      while (true) {
+        id = uid(20);
+        if (!this.collection.get(id)) {
+          break;
+        }
+      }
+      entry = new Models.Entry({
+        id: id,
+        title: "New Entry",
+        username: "",
+        password: this.genPass.generate(),
+        url: "http://"
+      });
+      return this.collection.add(entry);
+    };
+
+    return Entries;
+
+  })(Views.Section);
 
   Views.App = (function(_super) {
     __extends(App, _super);
@@ -44284,75 +44787,34 @@ require.register("drake/lib/index.js", function(exports, require, module){
       this.sync = __bind(this.sync, this);
       this.setNeedSync = __bind(this.setNeedSync, this);
       this.toggleSync = __bind(this.toggleSync, this);
-      this.newEntry = __bind(this.newEntry, this);
-      this.filterEntries = __bind(this.filterEntries, this);
-      this.renderEntries = __bind(this.renderEntries, this);
-      this.renderEntry = __bind(this.renderEntry, this);
-      this.open = __bind(this.open, this);
+      this.openChest = __bind(this.openChest, this);
       this.setChestContent = __bind(this.setChestContent, this);
       this.downloadChest = __bind(this.downloadChest, this);
       this.setChestMetadata = __bind(this.setChestMetadata, this);
-      this.getChestMetadata = __bind(this.getChestMetadata, this);
-      this.pickerCb = __bind(this.pickerCb, this);
-      this.pick = __bind(this.pick, this);
+      this.pickChest = __bind(this.pickChest, this);
       this.newChest = __bind(this.newChest, this);
       this.getChestReq = __bind(this.getChestReq, this);
       this.showLoggedIn = __bind(this.showLoggedIn, this);
       this.checkAuth = __bind(this.checkAuth, this);
       this.auth = __bind(this.auth, this);
-      this.buildPicker = __bind(this.buildPicker, this);
+      this.loadDone = __bind(this.loadDone, this);
       this.loadPicker = __bind(this.loadPicker, this);
       this.loadDrive = __bind(this.loadDrive, this);
       this.load = __bind(this.load, this);
       this.toggleFilterHelp = __bind(this.toggleFilterHelp, this);
-      this.showEntries = __bind(this.showEntries, this);
-      this.hideOpen = __bind(this.hideOpen, this);
-      this.showOpen = __bind(this.showOpen, this);
-      this.hideNew = __bind(this.hideNew, this);
-      this.showNew = __bind(this.showNew, this);
-      this.hideLoad = __bind(this.hideLoad, this);
-      this.showLoad = __bind(this.showLoad, this);
-      this.hideAuth = __bind(this.hideAuth, this);
-      this.showAuth = __bind(this.showAuth, this);
-      this.setupPlugins = __bind(this.setupPlugins, this);
       this.error = __bind(this.error, this);
+      this.setupPlugins = __bind(this.setupPlugins, this);
+      this.setupListeners = __bind(this.setupListeners, this);
       this.initialize = __bind(this.initialize, this);
-      _ref7 = App.__super__.constructor.apply(this, arguments);
-      return _ref7;
+      _ref13 = App.__super__.constructor.apply(this, arguments);
+      return _ref13;
     }
 
     App.prototype.el = ".app";
 
     App.prototype.events = {
-      "click .auth button": function() {
-        return this.auth(false, this.checkAuth);
-      },
-      "click .load .new": function() {
-        this.hideLoad();
-        return this.showNew();
-      },
-      "click .new .ok": function() {
-        var name, password;
-        name = this.$(".new .name").val().trim();
-        password = this.$(".new .password").val();
-        if (!(name && password)) {
-          return;
-        }
-        this.hideNew();
-        return this.newChest(name, password);
-      },
-      "click .new .cancel": function() {
-        this.hideNew();
-        return this.showLoad();
-      },
-      "click .load .pick": "pick",
-      "click .open button": "open",
-      "keyup .filter input": "filterEntries",
-      "blur .filter input": "filterEntries",
-      "change .filter input": "filterEntries",
       "click .filter .help": "toggleFilterHelp",
       "click .filter-help": "toggleFilterHelp",
-      "click .new-entry": "newEntry",
       "click .sync": "sync"
     };
 
@@ -44360,13 +44822,40 @@ require.register("drake/lib/index.js", function(exports, require, module){
       this.chest = new Models.Chest({
         status: "synced"
       });
-      this.chest.on("change:status", this.toggleSync);
       this.chest.entries = new Collections.Entries();
-      this.chest.entries.on("add", this.renderEntry).on("remove", this.removeEntry).on("remove", this.setNeedSync).on("reset", this.renderEntries).on("change", this.setNeedSync);
-      this.genPass = new Views.GenPass({
-        model: new Models.GenPassSettings()
+      this.views = {
+        auth: new Views.Auth(),
+        load: new Views.Load(),
+        open: new Views.Open(),
+        entries: new Views.Entries({
+          collection: this.chest.entries
+        })
+      };
+      this.setupListeners();
+      return this.setupPlugins();
+    };
+
+    App.prototype.setupListeners = function() {
+      this.listenTo(this.chest, "change:status", this.toggleSync);
+      this.listenTo(this.chest.entries, "add", this.setNeedSync);
+      this.listenTo(this.chest.entries, "remove", this.setNeedSync);
+      this.listenTo(this.chest.entries, "change", this.setNeedSync);
+      this.listenTo(this.views.auth, "auth", _.partial(this.auth, false));
+      this.listenTo(this.views.load, "new", this.newChest);
+      this.listenTo(this.views.load, "pick", this.pickChest);
+      this.listenTo(this.views.open, "open", this.openChest);
+      return this;
+    };
+
+    App.prototype.setupPlugins = function() {
+      NProgress.configure({
+        showSpinner: false
       });
-      this.setupPlugins();
+      $(document).ajaxStart(function() {
+        return NProgress.start();
+      }).ajaxStop(function() {
+        return NProgress.done();
+      });
       return this;
     };
 
@@ -44386,107 +44875,33 @@ require.register("drake/lib/index.js", function(exports, require, module){
       }
     };
 
-    App.prototype.setupPlugins = function() {
-      NProgress.configure({
-        showSpinner: false
-      });
-      $(document).ajaxStart(function() {
-        return NProgress.start();
-      }).ajaxStop(function() {
-        return NProgress.done();
-      });
-      return this;
-    };
-
-    App.prototype.showAuth = function() {
-      this.$(".auth.section").show();
-      return this;
-    };
-
-    App.prototype.hideAuth = function() {
-      this.$(".auth.section").hide();
-      return this;
-    };
-
-    App.prototype.showLoad = function() {
-      this.$(".load.section").show();
-      return this;
-    };
-
-    App.prototype.hideLoad = function() {
-      this.$(".load.section").hide();
-      return this;
-    };
-
-    App.prototype.showNew = function() {
-      enter(_.bind(function() {
-        return this.$(".new .ok").trigger("click");
-      }, this));
-      escape(_.bind(function() {
-        return this.$(".new .cancel").trigger("click");
-      }, this));
-      this.$(".new.section").show().find(".name").focus();
-      return this;
-    };
-
-    App.prototype.hideNew = function() {
-      enter.unbind();
-      escape.unbind();
-      this.$(".new.section").hide();
-      return this;
-    };
-
-    App.prototype.showOpen = function() {
-      enter(_.bind(function() {
-        return this.$(".open button").trigger("click");
-      }, this));
-      this.$(".open.section").show().find(".password").focus();
-      return this;
-    };
-
-    App.prototype.hideOpen = function() {
-      enter.unbind();
-      this.$(".open.section").hide();
-      return this;
-    };
-
-    App.prototype.showEntries = function() {
-      this.$(".entries").show();
-      return this;
-    };
-
     App.prototype.toggleFilterHelp = function(e) {
       e.preventDefault();
-      $(".filter-help").toggle();
-      return this;
+      return $(".filter-help").toggle();
     };
 
     App.prototype.load = function() {
       NProgress.start();
-      gapi.load("auth,client", this.loadDrive);
-      return this;
+      return gapi.load("auth,client", this.loadDrive);
     };
 
     App.prototype.loadDrive = function() {
-      gapi.client.load("drive", "v2", this.loadPicker);
-      return this;
+      return gapi.client.load("drive", "v2", this.loadPicker);
     };
 
     App.prototype.loadPicker = function(cb) {
-      google.load("picker", "1", {
-        callback: this.buildPicker
+      return google.load("picker", "1", {
+        callback: this.loadDone
       });
-      return this;
     };
 
-    App.prototype.buildPicker = function() {
+    App.prototype.loadDone = function() {
       NProgress.done();
-      this.picker = new google.picker.PickerBuilder().addView(google.picker.ViewId.DOCS).setCallback(this.pickerCb).build();
-      this.auth(true, this.checkAuth);
-      return this;
+      this.views.load.buildPicker();
+      return this.auth(true);
     };
 
-    App.prototype.auth = function(immediate, cb) {
+    App.prototype.auth = function(immediate) {
       var config;
       config = {
         client_id: Config.clientId,
@@ -44498,8 +44913,7 @@ require.register("drake/lib/index.js", function(exports, require, module){
       } else {
         config.prompt = "select_account";
       }
-      gapi.auth.authorize(config, cb);
-      return this;
+      return gapi.auth.authorize(config, this.checkAuth);
     };
 
     App.prototype.checkAuth = function(token) {
@@ -44510,17 +44924,15 @@ require.register("drake/lib/index.js", function(exports, require, module){
           method: "GET"
         });
         req.execute(this.showLoggedIn);
-        this.hideAuth();
-        this.showLoad();
+        this.views.auth.hide();
+        return this.views.load.show();
       } else {
-        this.showAuth();
+        return this.views.auth.show();
       }
-      return this;
     };
 
     App.prototype.showLoggedIn = function(user) {
-      this.$(".logged-in").show().find(".email").text(user.email);
-      return this;
+      return this.$(".logged-in").show().find(".email").text(user.email);
     };
 
     App.prototype.multipartBody = function(boundary, metadata, contentType, data) {
@@ -44571,43 +44983,25 @@ require.register("drake/lib/index.js", function(exports, require, module){
         password: password
       }).update();
       req = this.getChestReq("POST");
-      req.execute(this.setChestMetadata);
-      return this;
+      return req.execute(this.setChestMetadata);
     };
 
-    App.prototype.pick = function() {
-      this.picker.setVisible(true);
-      return this;
-    };
-
-    App.prototype.pickerCb = function(data) {
-      var fileId;
-      switch (data[google.picker.Response.ACTION]) {
-        case google.picker.Action.PICKED:
-          fileId = data[google.picker.Response.DOCUMENTS][0].id;
-          this.getChestMetadata(fileId);
-      }
-      return this;
-    };
-
-    App.prototype.getChestMetadata = function(fileId) {
+    App.prototype.pickChest = function(fileId) {
       var req;
       NProgress.start();
       req = gapi.client.drive.files.get({
         fileId: fileId
       });
-      req.execute(this.setChestMetadata);
-      return this;
+      return req.execute(this.setChestMetadata);
     };
 
     App.prototype.setChestMetadata = function(metadata) {
       this.chest.set(metadata);
-      this.downloadChest();
-      return this;
+      return this.downloadChest();
     };
 
     App.prototype.downloadChest = function() {
-      $.ajax({
+      return $.ajax({
         url: this.chest.get("downloadUrl"),
         type: "get",
         headers: {
@@ -44616,101 +45010,28 @@ require.register("drake/lib/index.js", function(exports, require, module){
       }).done(this.setChestContent).fail(function() {
         return this.error("Failed to download chest");
       });
-      return this;
     };
 
     App.prototype.setChestContent = function(resp) {
       NProgress.done();
       this.chest.set("ciphertext", JSON.stringify(resp));
-      this.hideLoad();
-      this.showOpen();
-      return this;
+      this.views.load.hide();
+      return this.views.open.show();
     };
 
-    App.prototype.open = function() {
-      var password;
-      this.error();
-      password = this.$(".open .password").val();
+    App.prototype.openChest = function(password) {
       if (this.chest.open(password)) {
-        this.hideOpen();
-        this.showEntries();
+        this.views.open.hide();
+        return this.views.entries.show();
       } else {
-        this.error("Failed to open chest");
+        return this.error("Failed to open chest");
       }
-      return this;
-    };
-
-    App.prototype.renderEntry = function(entry) {
-      var filter;
-      if (this.filterProp !== "trashed" && entry.get("trashed")) {
-        return;
-      }
-      if (this.filterProp && entry.has(this.filterProp)) {
-        if (this.filterProp === "trashed") {
-          if (!entry.get("trashed")) {
-            return;
-          }
-        } else {
-          filter = new RegExp(this.filter.source.substring(this.filterProp.length + 1), "i");
-          if (!filter.test(entry.get(this.filterProp))) {
-            return;
-          }
-        }
-      } else {
-        if (this.filter && !this.filter.test(entry.get("title"))) {
-          return;
-        }
-      }
-      this.$(".entries > ul").append(new Views.Entry({
-        model: entry,
-        el: reactive(Templates.entry.cloneNode(true), entry).el
-      }).$el);
-      return this;
-    };
-
-    App.prototype.renderEntries = function(entries) {
-      this.$(".entries > ul").empty();
-      entries.each(this.renderEntry);
-      return this;
-    };
-
-    App.prototype.filterEntries = function() {
-      var filterVal;
-      filterVal = this.$(".filter input").val().trim();
-      if (filterVal.lastIndexOf(":") > 0) {
-        this.filterProp = filterVal.split(":")[0];
-      } else {
-        this.filterProp = null;
-      }
-      this.filter = new RegExp(filterVal, "i");
-      this.renderEntries(this.chest.entries);
-      return this;
-    };
-
-    App.prototype.newEntry = function() {
-      var entry, id;
-      this.chest.set("status", "needSync");
-      while (true) {
-        id = uid(20);
-        if (!this.chest.entries.get(id)) {
-          break;
-        }
-      }
-      entry = new Models.Entry({
-        id: id,
-        title: "New Entry",
-        username: "",
-        password: this.genPass.generate(),
-        url: "http://"
-      });
-      this.chest.entries.add(entry);
-      return this;
     };
 
     App.prototype.toggleSync = function() {
       var status;
       status = this.chest.get("status");
-      this.$(".sync").prop("disabled", status !== "needSync").find("span").text((function() {
+      return this.$(".sync").prop("disabled", status !== "needSync").find("span").text((function() {
         switch (status) {
           case "needSync":
             return "Sync";
@@ -44720,12 +45041,10 @@ require.register("drake/lib/index.js", function(exports, require, module){
             return "Synced";
         }
       })());
-      return this;
     };
 
     App.prototype.setNeedSync = function() {
-      this.chest.set("status", "needSync");
-      return this;
+      return this.chest.set("status", "needSync");
     };
 
     App.prototype.sync = function() {
@@ -44733,15 +45052,13 @@ require.register("drake/lib/index.js", function(exports, require, module){
       NProgress.start();
       this.chest.set("status", "syncing").update();
       req = this.getChestReq("PUT");
-      req.execute(this.updateChestMetadata);
-      return this;
+      return req.execute(this.updateChestMetadata);
     };
 
     App.prototype.updateChestMetadata = function(metadata) {
       NProgress.done();
       this.chest.set(metadata);
-      this.chest.set("status", "synced");
-      return this;
+      return this.chest.set("status", "synced");
     };
 
     return App;
@@ -44753,6 +45070,7 @@ require.register("drake/lib/index.js", function(exports, require, module){
 }).call(this);
 
 });
+
 
 
 
@@ -44834,17 +45152,16 @@ require.alias("component-indexof/index.js", "component-classes/deps/indexof/inde
 require.alias("component-query/index.js", "component-reactive/deps/query/index.js");
 
 require.alias("component-reactive/lib/index.js", "component-reactive/index.js");
-require.alias("segmentio-on-enter/index.js", "drake/deps/on-enter/index.js");
-require.alias("segmentio-on-enter/index.js", "on-enter/index.js");
-require.alias("component-event/index.js", "segmentio-on-enter/deps/event/index.js");
+require.alias("yields-k/index.js", "drake/deps/k/index.js");
+require.alias("yields-k/proto.js", "drake/deps/k/proto.js");
+require.alias("yields-k/index.js", "k/index.js");
+require.alias("yields-keycode/index.js", "yields-k/deps/keycode/index.js");
 
-require.alias("component-indexof/index.js", "segmentio-on-enter/deps/indexof/index.js");
+require.alias("component-event/index.js", "yields-k/deps/event/index.js");
 
-require.alias("segmentio-on-escape/index.js", "drake/deps/on-escape/index.js");
-require.alias("segmentio-on-escape/index.js", "on-escape/index.js");
-require.alias("component-event/index.js", "segmentio-on-escape/deps/event/index.js");
+require.alias("component-bind/index.js", "yields-k/deps/bind/index.js");
 
-require.alias("component-indexof/index.js", "segmentio-on-escape/deps/indexof/index.js");
+require.alias("component-os/index.js", "yields-k/deps/os/index.js");
 
 require.alias("rstacruz-passwordgen.js/lib/index.js", "drake/deps/passwordgen/lib/index.js");
 require.alias("rstacruz-passwordgen.js/lib/words.js", "drake/deps/passwordgen/lib/words.js");

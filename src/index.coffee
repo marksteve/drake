@@ -6,8 +6,7 @@ NProgress = require "nprogress"
 sjcl = require "sjcl"
 uid = require "uid"
 reactive = require "reactive"
-enter = require "on-enter"
-escape = require "on-escape"
+k = require "k"
 Passwordgen = require "passwordgen"
 
 
@@ -77,7 +76,6 @@ class Models.Chest extends Backbone.Model
   update: =>
     data = JSON.stringify(@entries.toJSON())
     @set("ciphertext", sjcl.encrypt(@get("password"), data))
-    @
 
 class Views.Entry extends Backbone.View
 
@@ -89,24 +87,20 @@ class Views.Entry extends Backbone.View
 
   showPassword: =>
     @$(".password").attr("type", "text")
-    @
 
   hidePasword: =>
     @$(".password").attr("type", "password")
-    @
 
   trash: (e) =>
     e.preventDefault()
     @model.set("trashed", true)
     @remove()
-    @
 
   delete: (e) =>
     e.preventDefault()
     if confirm("Are you sure you want to permanently delete this entry?")
       @model.collection.remove(@model)
       @remove()
-    @
 
 class Views.GenPass extends Backbone.View
 
@@ -119,7 +113,6 @@ class Views.GenPass extends Backbone.View
   initialize: =>
     @gen = new Passwordgen()
     reactive(@el, @model)
-    @
 
   generate: =>
     type = @model.get("type")
@@ -132,56 +125,225 @@ class Views.GenPass extends Backbone.View
 
   output: =>
     @$(".output").text(@generate())
-    @
 
   toggleSettings: (e) =>
     e.preventDefault()
     e.stopPropagation()
     @$(".settings").toggle()
+
+class Views.Section extends Backbone.View
+
+  show: =>
+    @$el.show()
     @
+
+  hide: =>
+    @$el.hide()
+    @
+
+class Views.Auth extends Views.Section
+
+  el: ".auth.section"
+
+  events: =>
+    "click button": "auth"
+
+  auth: =>
+    @trigger("auth")
+
+
+class Views.Load extends Views.Section
+
+  el: ".load.section"
+
+  events:
+    "click .new": "showNew"
+    "click .pick": "showPick"
+
+  initialize: =>
+    @_new = new Views.New()
+    @listenTo(@_new, "ok", @newChest)
+    @listenTo(@_new, "cancel", @show)
+
+  showNew: =>
+    @hide()
+    @_new.show()
+
+  newChest: (name, password) =>
+    @trigger("new", name, password)
+
+  buildPicker: =>
+    @picker = new google.picker.PickerBuilder()
+      .addView(google.picker.ViewId.DOCS)
+      .setCallback(@pickerCb)
+      .build()
+
+  showPick: =>
+    @picker.setVisible(true)
+
+  pickerCb: (data) =>
+    switch data[google.picker.Response.ACTION]
+      when google.picker.Action.PICKED
+        fileId = data[google.picker.Response.DOCUMENTS][0].id
+        @trigger("pick", fileId)
+
+class Views.New extends Views.Section
+
+  el: ".new.section"
+
+  events:
+    "click .ok": "ok"
+    "click .cancel": "cancel"
+
+  initialize: =>
+    $ok = @$(".ok")
+    $cancel = @$(".cancel")
+    _k = k(@el)
+    _k.ignore = -> false
+    _k("enter", -> $ok.trigger("click"))
+    _k("escape", -> $cancel.trigger("click"))
+
+  show: =>
+    super()
+    @$(".name").focus()
+    @
+
+  ok: =>
+    name = @$(".name").val().trim()
+    password = @$(".password").val().trim()
+    unless (name and password)
+      return
+    @hide()
+    @trigger("ok", name, password)
+
+  cancel: =>
+    @hide()
+    @trigger("cancel")
+
+class Views.Open extends Views.Section
+
+  el: ".open.section"
+
+  events:
+    "click button": "open"
+
+  initialize: =>
+    $button = @$("button")
+    _k = k(@el)
+    _k.ignore = -> false
+    _k("enter", -> $button.trigger("click"))
+
+  show: =>
+    super()
+    @$(".password").focus()
+    @
+
+  open: =>
+    password = @$(".password").val()
+    @trigger("open", password)
+
+
+class Views.Entries extends Views.Section
+
+  el: ".entries"
+
+  events:
+    "keyup .filter input": "filterEntries"
+    "blur .filter input": "filterEntries"
+    "change .filter input": "filterEntries"
+    "click .new-entry": "newEntry"
+
+  initialize: =>
+    @genPass = new Views.GenPass(model: new Models.GenPassSettings())
+    @listenTo(@collection, "add", @renderEntry)
+    @listenTo(@collection, "remove", @removeEntry)
+    @listenTo(@collection, "reset", @renderEntries)
+
+  renderEntry: (entry) =>
+    if @filterProp != "trashed" and entry.get("trashed")
+      return
+    if @filterProp and entry.has(@filterProp)
+      if @filterProp == "trashed"
+        if not entry.get("trashed")
+          return
+      else
+        filter = new RegExp(
+          @filter.source.substring(@filterProp.length + 1),
+          "i")
+        if not filter.test(entry.get(@filterProp))
+          return
+    else
+      if @filter and not @filter.test(entry.get("title"))
+        return
+    @$("> ul").append(new Views.Entry(
+      model: entry
+      el: reactive(Templates.entry.cloneNode(true), entry).el
+    ).$el)
+
+  renderEntries: (entries) =>
+    @$("> ul").empty()
+    entries.each(@renderEntry)
+
+  filterEntries: =>
+    filterVal = @$(".filter input").val().trim()
+    if filterVal.lastIndexOf(":") > 0
+      @filterProp = filterVal.split(":")[0]
+    else
+      @filterProp = null
+    @filter = new RegExp(filterVal, "i")
+    @renderEntries(@collection)
+
+  newEntry: =>
+    while true
+      id = uid(20)
+      unless @collection.get(id)
+        break
+    entry = new Models.Entry
+      id: id
+      title: "New Entry"
+      username: ""
+      password: @genPass.generate()
+      url: "http://"
+    @collection.add(entry)
 
 class Views.App extends Backbone.View
 
   el: ".app"
 
   events:
-    "click .auth button": ->
-      @auth false, @checkAuth
-    "click .load .new": ->
-      @hideLoad()
-      @showNew()
-    "click .new .ok": ->
-      name = @$(".new .name").val().trim()
-      password = @$(".new .password").val()
-      unless (name and password)
-        return
-      @hideNew()
-      @newChest(name, password)
-    "click .new .cancel": ->
-      @hideNew()
-      @showLoad()
-    "click .load .pick": "pick"
-    "click .open button": "open"
-    "keyup .filter input": "filterEntries"
-    "blur .filter input": "filterEntries"
-    "change .filter input": "filterEntries"
     "click .filter .help": "toggleFilterHelp"
     "click .filter-help": "toggleFilterHelp"
-    "click .new-entry": "newEntry"
     "click .sync": "sync"
 
   initialize: =>
     @chest = new Models.Chest(status: "synced")
-    @chest.on("change:status", @toggleSync)
     @chest.entries = new Collections.Entries()
-    @chest.entries
-      .on("add", @renderEntry)
-      .on("remove", @removeEntry)
-      .on("remove", @setNeedSync)
-      .on("reset", @renderEntries)
-      .on("change", @setNeedSync)
-    @genPass = new Views.GenPass(model: new Models.GenPassSettings())
+    @views =
+      auth: new Views.Auth()
+      load: new Views.Load()
+      open: new Views.Open()
+      entries: new Views.Entries(collection: @chest.entries)
+    @setupListeners()
     @setupPlugins()
+
+  setupListeners: =>
+    @listenTo(@chest, "change:status", @toggleSync)
+    @listenTo(@chest.entries, "add", @setNeedSync)
+    @listenTo(@chest.entries, "remove", @setNeedSync)
+    @listenTo(@chest.entries, "change", @setNeedSync)
+    @listenTo(@views.auth, "auth", _.partial(@auth, false))
+    @listenTo(@views.load, "new", @newChest)
+    @listenTo(@views.load, "pick", @pickChest)
+    @listenTo(@views.open, "open", @openChest)
+    @
+
+  setupPlugins: =>
+    NProgress.configure(showSpinner: false)
+    $(document)
+      .ajaxStart ->
+        NProgress.start()
+      .ajaxStop ->
+        NProgress.done()
     @
 
   error: (message) =>
@@ -196,97 +358,26 @@ class Views.App extends Backbone.View
     else
       $error.hide()
 
-  setupPlugins: =>
-    NProgress.configure(showSpinner: false)
-    $(document)
-      .ajaxStart ->
-        NProgress.start()
-      .ajaxStop ->
-        NProgress.done()
-    @
-
-  showAuth: =>
-    @$(".auth.section").show()
-    @
-
-  hideAuth: =>
-    @$(".auth.section").hide()
-    @
-
-  showLoad: =>
-    @$(".load.section").show()
-    @
-
-  hideLoad: =>
-    @$(".load.section").hide()
-    @
-
-  showNew: =>
-    enter(_.bind ->
-      @$(".new .ok").trigger("click")
-    , @)
-    escape(_.bind ->
-      @$(".new .cancel").trigger("click")
-    , @)
-    @$(".new.section")
-      .show()
-      .find(".name")
-        .focus()
-    @
-
-  hideNew: =>
-    enter.unbind()
-    escape.unbind()
-    @$(".new.section").hide()
-    @
-
-  showOpen: =>
-    enter(_.bind ->
-      @$(".open button").trigger("click")
-    , @)
-    @$(".open.section")
-      .show()
-      .find(".password")
-        .focus()
-    @
-
-  hideOpen: =>
-    enter.unbind()
-    @$(".open.section").hide()
-    @
-
-  showEntries: =>
-    @$(".entries").show()
-    @
-
   toggleFilterHelp: (e) =>
     e.preventDefault()
     $(".filter-help").toggle()
-    @
 
   load: =>
     NProgress.start()
     gapi.load "auth,client", @loadDrive
-    @
 
   loadDrive: =>
     gapi.client.load "drive", "v2", @loadPicker
-    @
 
   loadPicker: (cb) =>
-    google.load "picker", "1", callback: @buildPicker
-    @
+    google.load "picker", "1", callback: @loadDone
 
-  buildPicker: =>
+  loadDone: =>
     NProgress.done()
-    @picker = new google.picker.PickerBuilder()
-      .addView(google.picker.ViewId.DOCS)
-      .setCallback(@pickerCb)
-      .build()
-    @auth true, @checkAuth
-    @
+    @views.load.buildPicker()
+    @auth(true)
 
-  auth: (immediate, cb) =>
+  auth: (immediate) =>
     config =
       client_id: Config.clientId
       scope: [
@@ -298,8 +389,7 @@ class Views.App extends Backbone.View
       config.immediate = immediate
     else
       config.prompt = "select_account"
-    gapi.auth.authorize(config, cb)
-    @
+    gapi.auth.authorize(config, @checkAuth)
 
   checkAuth: (token) =>
     if token and not token.error
@@ -307,18 +397,16 @@ class Views.App extends Backbone.View
         path: "/oauth2/v1/userinfo"
         method: "GET"
       req.execute(@showLoggedIn)
-      @hideAuth()
-      @showLoad()
+      @views.auth.hide()
+      @views.load.show()
     else
-      @showAuth()
-    @
+      @views.auth.show()
 
   showLoggedIn: (user) =>
     @$(".logged-in")
       .show()
       .find(".email")
         .text(user.email)
-    @
 
   multipartBody: (boundary, metadata, contentType, data) ->
     """
@@ -373,29 +461,15 @@ class Views.App extends Backbone.View
       .update()
     req = @getChestReq("POST")
     req.execute(@setChestMetadata)
-    @
 
-  pick: =>
-    @picker.setVisible(true)
-    @
-
-  pickerCb: (data) =>
-    switch data[google.picker.Response.ACTION]
-      when google.picker.Action.PICKED
-        fileId = data[google.picker.Response.DOCUMENTS][0].id
-        @getChestMetadata(fileId)
-    @
-
-  getChestMetadata: (fileId) =>
+  pickChest: (fileId) =>
     NProgress.start()
     req = gapi.client.drive.files.get(fileId: fileId)
     req.execute(@setChestMetadata)
-    @
 
   setChestMetadata: (metadata) =>
     @chest.set(metadata)
     @downloadChest()
-    @
 
   downloadChest: =>
     # TODO: Just use gapi for this
@@ -407,76 +481,19 @@ class Views.App extends Backbone.View
     .done(@setChestContent)
     .fail ->
       @error("Failed to download chest")
-    @
 
   setChestContent: (resp) =>
     NProgress.done()
     @chest.set("ciphertext", JSON.stringify(resp))
-    @hideLoad()
-    @showOpen()
-    @
+    @views.load.hide()
+    @views.open.show()
 
-  open: =>
-    @error()
-    password = @$(".open .password").val()
+  openChest: (password) =>
     if @chest.open(password)
-      @hideOpen()
-      @showEntries()
+      @views.open.hide()
+      @views.entries.show()
     else
       @error("Failed to open chest")
-    @
-
-  renderEntry: (entry) =>
-    if @filterProp != "trashed" and entry.get("trashed")
-      return
-    if @filterProp and entry.has(@filterProp)
-      if @filterProp == "trashed"
-        if not entry.get("trashed")
-          return
-      else
-        filter = new RegExp(
-          @filter.source.substring(@filterProp.length + 1),
-          "i")
-        if not filter.test(entry.get(@filterProp))
-          return
-    else
-      if @filter and not @filter.test(entry.get("title"))
-        return
-    @$(".entries > ul").append(new Views.Entry(
-      model: entry
-      el: reactive(Templates.entry.cloneNode(true), entry).el
-    ).$el)
-    @
-
-  renderEntries: (entries) =>
-    @$(".entries > ul").empty()
-    entries.each(@renderEntry)
-    @
-
-  filterEntries: =>
-    filterVal = @$(".filter input").val().trim()
-    if filterVal.lastIndexOf(":") > 0
-      @filterProp = filterVal.split(":")[0]
-    else
-      @filterProp = null
-    @filter = new RegExp(filterVal, "i")
-    @renderEntries(@chest.entries)
-    @
-
-  newEntry: =>
-    @chest.set("status", "needSync")
-    while true
-      id = uid(20)
-      unless @chest.entries.get(id)
-        break
-    entry = new Models.Entry
-      id: id
-      title: "New Entry"
-      username: ""
-      password: @genPass.generate()
-      url: "http://"
-    @chest.entries.add(entry)
-    @
 
   toggleSync: =>
     status = @chest.get("status")
@@ -489,11 +506,9 @@ class Views.App extends Backbone.View
             when "syncing" then "Syncing"
             when "synced" then "Synced"
         )
-    @
 
   setNeedSync: =>
     @chest.set("status", "needSync")
-    @
 
   sync: =>
     NProgress.start()
@@ -502,13 +517,11 @@ class Views.App extends Backbone.View
       .update()
     req = @getChestReq("PUT")
     req.execute(@updateChestMetadata)
-    @
 
   updateChestMetadata: (metadata) =>
     NProgress.done()
     @chest.set(metadata)
     @chest.set("status", "synced")
-    @
 
 
 # Export

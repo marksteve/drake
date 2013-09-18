@@ -11,8 +11,7 @@
     "marksteve/sjcl": "*",
     "matthewmueller/uid": "*",
     "component/reactive": "*",
-    "segmentio/on-enter": "*",
-    "segmentio/on-escape": "*",
+    "yields/k": "*",
     "rstacruz/passwordgen.js": "*"
   },
   "scripts": [
