@@ -8,6 +8,7 @@ uid = require "uid"
 reactive = require "reactive"
 k = require "k"
 Passwordgen = require "passwordgen"
+store = require "store"
 
 
 # Config
@@ -108,7 +109,7 @@ class Views.GenPass extends Backbone.View
 
   events:
     "click button": "output"
-    "click .icon-settings": "toggleSettings"
+    "click .settings": "toggleSettings"
 
   initialize: =>
     @gen = new Passwordgen()
@@ -159,11 +160,21 @@ class Views.Load extends Views.Section
   events:
     "click .new": "showNew"
     "click .pick": "showPick"
+    "click .last-opened": "pickLastOpened"
 
   initialize: =>
     @_new = new Views.New()
     @listenTo(@_new, "ok", @newChest)
     @listenTo(@_new, "cancel", @show)
+
+  show: =>
+    super()
+    $lastOpened = @$(".last-opened")
+    lastOpened = store.get("lastOpened")
+    if lastOpened
+      $lastOpened.show().find("span").text(lastOpened.title)
+    else
+      $lastOpened.hide()
 
   showNew: =>
     @hide()
@@ -186,6 +197,9 @@ class Views.Load extends Views.Section
       when google.picker.Action.PICKED
         fileId = data[google.picker.Response.DOCUMENTS][0].id
         @trigger("pick", fileId)
+
+  pickLastOpened: =>
+    @trigger("pick", store.get("lastOpened").id)
 
 class Views.New extends Views.Section
 
@@ -233,8 +247,9 @@ class Views.Open extends Views.Section
     _k.ignore = -> false
     _k("enter", -> $button.trigger("click"))
 
-  show: =>
+  show: (title) =>
     super()
+    @$("h2").text(title)
     @$(".password").focus()
     @
 
@@ -486,12 +501,15 @@ class Views.App extends Backbone.View
     NProgress.done()
     @chest.set("ciphertext", JSON.stringify(resp))
     @views.load.hide()
-    @views.open.show()
+    @views.open.show(@chest.get("title"))
 
   openChest: (password) =>
     if @chest.open(password)
       @views.open.hide()
       @views.entries.show()
+      store.set "lastOpened",
+        id: @chest.get("id")
+        title: @chest.get("title")
     else
       @error("Failed to open chest")
 

@@ -32,14 +32,14 @@
           </ul>
         </div>
         <div class="logged-in">
-          <i class="icon icon-auth"></i>
+          <i class="icon-google-drive"></i>
           <span class="email"></span>
         </div>
         <div class="auth section">
           <div class="actions row">
             <div class="large-3 columns">
               <button>
-                <i class="icon icon-auth"></i>
+                <i class="icon-google-drive"></i>
                 Login
               </button>
             </div>
@@ -52,14 +52,20 @@
           <div class="actions row">
             <div class="large-3 columns">
               <button class="new">
-                <i class="icon icon-new"></i>
+                <i class="icon-file"></i>
                 New
               </button>
             </div>
-            <div class="large-3 pull-6 columns">
+            <div class="large-3 columns">
               <button class="pick">
-                <i class="icon icon-pick"></i>
+                <i class="icon-download"></i>
                 Open
+              </button>
+            </div>
+            <div class="large-6 columns">
+              <button class="last-opened">
+                <i class="icon-clock"></i>
+                Last opened: <span></span>
               </button>
             </div>
           </div>
@@ -78,19 +84,20 @@
           <div class="actions row">
             <div class="large-3 columns">
               <button class="ok">
-                <i class="icon icon-ok"></i>
+                <i class="icon-checkmark"></i>
                 Ok
               </button>
             </div>
             <div class="large-3 pull-6 columns">
               <button class="cancel">
-                <i class="icon icon-cancel"></i>
+                <i class="icon-close"></i>
                 Cancel
               </button>
             </div>
           </div>
         </div>
         <div class="open section">
+          <h2></h2>
           <p>
             Open chest by supplying the password entered upon creating the
             chest.
@@ -98,7 +105,7 @@
           <p>
             <input type="password" class="password" placeholder="Password">
             <button>
-              <i class="icon icon-open"></i>
+              <i class="icon-unlocked"></i>
               Open
             </button>
           </p>
@@ -111,13 +118,13 @@
           <div class="actions row">
             <div class="large-2 columns">
               <button class="new-entry">
-                <i class="icon icon-new-entry"></i>
+                <i class="icon-plus"></i>
                 New Entry
               </button>
             </div>
             <div class="large-2 columns">
               <button class="sync" disabled="disabled">
-                <i class="icon icon-sync"></i>
+                <i class="icon-upload"></i>
                 <span>Synced</span>
               </button>
             </div>
@@ -125,9 +132,9 @@
               <div class="row">
                 <div class="large-5 columns">
                   <button>
-                    <i class="icon icon-genpass"></i>
+                    <i class="icon-dice"></i>
                     Generate Password
-                    <a href="#" class="icon icon-settings"></a>
+                    <a href="#" class="toggle-settings icon-wrench"></a>
                   </button>
                 </div>
                 <div class="output large-7 columns"></div>
@@ -173,10 +180,10 @@
               <div>
                 <span class="remove">
                   <a href="#" class="trash" data-hide="trashed">
-                    <i class="icon icon-trash"></i>
+                    <i class="icon-remove"></i>
                   </a>
                   <a href="#" class="delete" data-show="trashed">
-                    <i class="icon icon-delete"></i>
+                    <i class="icon-cancel-circle"></i>
                   </a>
                 </span>
                 <h2 contenteditable="true" data-text="title"></h2>

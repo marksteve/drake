@@ -12,7 +12,8 @@
     "matthewmueller/uid": "*",
     "component/reactive": "*",
     "yields/k": "*",
-    "rstacruz/passwordgen.js": "*"
+    "rstacruz/passwordgen.js": "*",
+    "marcuswestin/store.js": "*"
   },
   "scripts": [
     "lib/index.js"
