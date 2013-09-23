@@ -13,7 +13,17 @@
   <body>
     <div class="app row">
       <div class="columns">
-        <h1><a href="">Drake</a></h1>
+        <div class="row">
+          <div class="large-6 columns">
+            <h1><a href="">Drake</a></h1>
+          </div>
+          <div class="large-6 columns text-right">
+            <span class="logged-in">
+              <i class="icon-google-drive"></i>
+              <span class="email"></span>
+            </span>
+          </div>
+        </div>
         <div class="error"><span></span></div>
         <div class="filter-help">
           <h2>Search tips</h2>
@@ -30,10 +40,6 @@
             <li>url:com$ <em>&mdash; matches entries with urls that end with "com"</em></li>
             <li>password:^asdf <em>&mdash; matches entries with passwords that start with "asdf"</em></li>
           </ul>
-        </div>
-        <div class="logged-in">
-          <i class="icon-google-drive"></i>
-          <span class="email"></span>
         </div>
         <div class="auth section">
           <div class="actions row">

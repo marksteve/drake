@@ -38,6 +38,14 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
     bottom: 5em;
   }
   position: relative;
+  @media only screen and (max-width:"#{$small-screen}") {
+    & {
+      margin: {
+        top: 1em;
+        bottom: 1em;
+      }
+    }
+  }
   h1 {
     background: url(../../../images/drake.png) no-repeat left top;
     padding-left: 40px;
@@ -45,6 +53,9 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
     a {
       text-decoration: none;
       color: inherit;
+    }
+    @media only screen and (max-width:"#{$small-screen}") {
+      text-align: right;
     }
   }
   button, input[type=text], input[type=password] {
@@ -64,6 +75,20 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
     color: white;
     &:disabled {
       color: #bbb;
+    }
+  }
+  .logged-in {
+    color: #aaa;
+    border: 1px solid;
+    background: white;
+    display: inline-block;
+    padding: 0 1em;
+    line-height: 2em;
+    @media only screen and (max-width:"#{$small-screen}") {
+      & {
+        width: 100%;
+        text-align: center;
+      }
     }
   }
   .actions {
@@ -100,18 +125,6 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
     }
     background: rgba(0, 0, 0, 0.9);
     z-index: 10;
-  }
-  .logged-in {
-    display: none;
-    position: absolute;
-    top: 0;
-    right: 15px;
-    color: #aaa;
-    border: 1px solid;
-    background: white;
-    padding: 0 10px;
-    line-height: 30px;
-    font-size: 14px;
   }
   .entries {
     ul {
@@ -208,6 +221,10 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
     padding-top: 1em;
     a {
       color: #888;
+    }
+    @media only screen and (max-width:"#{$small-screen}") {
+      margin-top: 1em;
+      text-align: center;
     }
   }
 }
