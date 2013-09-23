@@ -109,7 +109,7 @@ class Views.GenPass extends Backbone.View
 
   events:
     "click button": "output"
-    "click .settings": "toggleSettings"
+    "click .toggle-settings": "toggleSettings"
 
   initialize: =>
     @gen = new Passwordgen()

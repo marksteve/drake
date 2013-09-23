@@ -44594,7 +44594,7 @@ require.register("drake/lib/index.js", function(exports, require, module){
 
     GenPass.prototype.events = {
       "click button": "output",
-      "click .settings": "toggleSettings"
+      "click .toggle-settings": "toggleSettings"
     };
 
     GenPass.prototype.initialize = function() {
