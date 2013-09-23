@@ -1113,7 +1113,8 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
     line-height: 1.5em;
     padding: 0 5px; }
   .app input[type=text], .app input[type=password] {
-    border: 1px #444 solid; }
+    border: 1px #444 solid;
+    border-radius: 0; }
     .app input[type=text]:focus, .app input[type=password]:focus {
       outline: 0;
       border-color: #ccc; }
@@ -1128,12 +1129,13 @@ body, input, select, textarea, h1, h2, h3, h4, h5 {
     border: 1px solid;
     background: white;
     display: inline-block;
-    padding: 0 1em;
+    padding: 0 10px;
     line-height: 2em; }
     @media only screen and (max-width: 768px) {
       .app .logged-in {
         width: 100%;
-        text-align: center; } }
+        text-align: center;
+        margin-bottom: 0.5em; } }
   .app .actions button {
     width: 100%; }
   .app .section {
