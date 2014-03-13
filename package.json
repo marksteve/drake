@@ -24,6 +24,8 @@
     "gulp-minify-css": "^0.3.0",
     "gulp-sass": "^0.7.1",
     "gulp-uglify": "^0.2.1",
-    "gulp-component": "^0.1.7"
+    "gulp-component": "^0.1.7",
+    "component": "~0.19.7",
+    "gulp-rename": "~1.2.0"
   }
 }

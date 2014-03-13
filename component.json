@@ -1,19 +1,19 @@
 {
   "name": "drake",
   "dependencies": {
-    "necolas/normalize.css": "*",
-    "component/json-fallback": "*",
-    "component/json": "*",
-    "components/jquery": "*",
-    "components/underscore": "*",
-    "components/backbone": "*",
-    "rstacruz/nprogress": "*",
-    "marksteve/sjcl": "*",
-    "matthewmueller/uid": "*",
-    "component/reactive": "*",
-    "yields/k": "*",
-    "rstacruz/passwordgen.js": "*",
-    "marcuswestin/store.js": "*"
+    "necolas/normalize.css": "3.0.0",
+    "component/json-fallback": "0.0.1",
+    "component/json": "0.0.2",
+    "components/jQuery": "2.1.0",
+    "components/underscore": "1.5.2",
+    "components/backbone": "1.1.0",
+    "marksteve/nprogress": "0.1.2",
+    "marksteve/sjcl": "1.0.0",
+    "matthewmueller/uid": "0.0.2",
+    "component/reactive": "0.13.2",
+    "yields/k": "0.6.1",
+    "rstacruz/passwordgen.js": "0.2.0",
+    "marcuswestin/store.js": "1.3.16"
   },
   "scripts": [
     "lib/index.js"

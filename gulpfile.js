@@ -8,32 +8,32 @@ var uglify = require('gulp-uglify');
 
 
 var paths = {
-  js: './src/*.coffee',
-  css: './src/*.scss',
+  coffee: './src/index.coffee',
+  sass: './src/index.scss',
 };
 
-gulp.task('js', function() {
-  return gulp.src(paths.js)
+gulp.task('coffee', function() {
+  return gulp.src(paths.coffee)
     .pipe(coffee())
     .pipe(gulp.dest('./lib'));
 });
 
-gulp.task('css', function() {
-  return gulp.src(paths.css)
+gulp.task('sass', function() {
+  return gulp.src(paths.sass)
     .pipe(sass())
     .pipe(gulp.dest('./lib'));
 });
 
-gulp.task('componentJS', ['js'], function() {
+gulp.task('componentJS', ['coffee'], function() {
   return gulp.src('component.json')
-    .pipe(component.scripts())
+    .pipe(component.scripts({}))
     .pipe(rename({basename: 'build'}))
     .pipe(gulp.dest('./build'));
 });
 
-gulp.task('componentCSS', ['css'], function() {
+gulp.task('componentCSS', ['sass'], function() {
   return gulp.src('component.json')
-    .pipe(component.styles())
+    .pipe(component.styles({}))
     .pipe(rename({basename: 'build'}))
     .pipe(gulp.dest('./build'));
 });
@@ -53,8 +53,8 @@ gulp.task('minifyCSS', ['componentCSS'], function() {
 });
 
 gulp.task('watch', function() {
-  gulp.watch(paths.js, ['uglify']);
-  gulp.watch(paths.css, ['minifyCSS']);
+  gulp.watch(paths.coffee, ['uglify']);
+  gulp.watch(paths.sass, ['minifyCSS']);
 });
 
-gulp.task('default', ['uglify', 'minifyCSS', 'watch']);
+gulp.task('default', ['uglify', 'minifyCSS']);
