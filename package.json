@@ -2,7 +2,7 @@
   "name": "drake",
   "version": "0.0.1",
   "description": "Password management with Google Drive",
-  "main": "index.js",
+  "main": "index.html",
   "scripts": {
     "start": "make serve",
     "test": "echo \"Error: no test specified\" && exit 1"
