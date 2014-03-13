@@ -17,5 +17,13 @@
     "google-drive"
   ],
   "author": "Mark Steve Samson <hello@marksteve.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "gulp": "^3.5.5",
+    "gulp-coffee": "^1.4.1",
+    "gulp-minify-css": "^0.3.0",
+    "gulp-sass": "^0.7.1",
+    "gulp-uglify": "^0.2.1",
+    "gulp-component": "^0.1.7"
+  }
 }
