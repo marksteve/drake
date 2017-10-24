@@ -1,6 +1,6 @@
 # Drake
 
-![Drake](http://marksteve.com/drake/images/drake-256.png)
+![Drake](https://marksteve.com/drake/images/drake-256.png)
 
 Keep your passwords in "chests" that are stored and synced to your Google Drive account.
 
@@ -42,9 +42,9 @@ $ serve  # https://github.com/visionmedia/serve
 
 ## License
 
-http://marksteve.mit-license.org
+https://marksteve.mit-license.org
 
 ## Drake?
 
 Treasure chests can be locked and hold valuable items.
-Drive. Dr... Drake. [Francis Drake](http://en.wikipedia.org/wiki/Francis_Drake).
+Drive. Dr... Drake. [Francis Drake](https://en.wikipedia.org/wiki/Francis_Drake).
